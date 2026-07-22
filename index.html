@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Daily Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>Mi Daily Tracker</h1>
+    <div class="sub" id="today-label">Cargando...</div>
+  </div>
+  <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-view="hoy">Hoy</div>
+  <div class="tab" data-view="mes">Mes</div>
+  <div class="tab" data-view="analytics">Analíticas</div>
+  <div class="tab" data-view="editar">Editar hábitos</div>
+  <div class="tab" data-view="ingles">Inglés</div>
+  <div class="tab" data-view="finanzas">Finanzas</div>
+</div>
+
+<div class="view active" id="view-hoy">
+  <div class="card">
+    <div class="row"><strong id="hoy-title">Hoy</strong>
+      <div class="ring" id="hoy-ring">0%</div>
+    </div>
+    <div id="hoy-list"></div>
+  </div>
+  <div class="card">
+    <div class="row"><strong>Semana</strong><span class="sub" style="margin:0" id="week-range"></span></div>
+    <div class="day-select" id="week-days"></div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Metas semanales</strong>
+    <div id="goal-list"></div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Nota del día</strong>
+    <textarea id="day-note" placeholder="¿Cómo te fue hoy? Algo que quieras recordar..."></textarea>
+  </div>
+</div>
+
+<div class="view" id="view-mes">
+  <div class="card">
+    <div class="row">
+      <input type="month" id="month-picker">
+      <div class="ring ring-green" id="mes-ring">0%</div>
+    </div>
+    <div class="scroll-x">
+      <table id="month-table"></table>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-analytics">
+  <div class="card">
+    <div class="stat">
+      <div><div class="num" id="an-total">0</div><div class="lbl">Días registrados</div></div>
+      <div><div class="num" id="an-streak">0</div><div class="lbl">Racha actual</div></div>
+      <div><div class="num" id="an-avg">0%</div><div class="lbl">Promedio global</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Tendencia (últimos 30 días)</strong>
+    <div class="chart-wrap">
+      <canvas id="trend-chart" role="img" aria-label="Gráfico de línea del porcentaje de hábitos cumplidos por día, últimos 30 días">Tendencia de cumplimiento diario de hábitos.</canvas>
+    </div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Consistencia por hábito</strong>
+    <div id="an-bars"></div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Top hábitos</strong>
+    <div id="an-rank"></div>
+  </div>
+</div>
+
+<div class="view" id="view-editar">
+  <div class="card">
+    <strong class="block-label">Tus hábitos</strong>
+    <div id="habit-editor"></div>
+    <div class="add-row">
+      <input id="new-habit" placeholder="Nombre del nuevo hábito">
+      <button class="btn" id="add-habit-btn">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-ingles">
+  <div class="card">
+    <div class="row"><strong>Horas acumuladas de inglés</strong>
+      <div class="ring ring-amber small" id="eng-ring">0h</div>
+    </div>
+    <div class="sub" style="margin-bottom:14px;">Nivel actual: <strong id="eng-level">B1</strong></div>
+    <div id="eng-progress"></div>
+  </div>
+  <div class="card">
+    <div class="row"><strong id="eng-day-title">Actividades de hoy</strong></div>
+    <div id="eng-list"></div>
+  </div>
+  <div class="card">
+    <div class="row"><strong>Meta semanal</strong><span class="sub" style="margin:0" id="eng-week-hours"></span></div>
+    <div class="barwrap" style="margin-bottom:8px;"><div class="bar" id="eng-week-bar"></div></div>
+    <div class="inline-field">
+      <span class="sub" style="margin:0;">Horas por semana:</span>
+      <input type="number" id="eng-goal-input" min="0" step="0.5">
+    </div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Historial (últimos 7 días)</strong>
+    <div class="sub" style="margin-top:-6px;">Tocá un día para ver o editar sus actividades.</div>
+    <div id="eng-history"></div>
+  </div>
+  <div class="card">
+    <strong class="block-label">Ajustar base de horas</strong>
+    <div class="sub" style="margin-bottom:8px;">Horas que ya tenías acumuladas antes de usar este tracker (no puede ser negativo).</div>
+    <div class="inline-field">
+      <input type="number" id="eng-base-input" min="0" step="0.1">
+      <button class="btn" id="save-eng-base-btn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="view-finanzas">
+  <div class="card">
+    <div class="stat">
+      <div><div class="num" id="fin-balance">Bs 0</div><div class="lbl">Balance total</div></div>
+      <div><div class="num" id="fin-income-month">Bs 0</div><div class="lbl">Ingresos del mes</div></div>
+      <div><div class="num" id="fin-expense-month">Bs 0</div><div class="lbl">Gastos del mes</div></div>
+      <div><div class="num" id="fin-savings-month">Bs 0</div><div class="lbl">Ahorro del mes</div></div>
+    </div>
+    <div class="sub" id="fin-week-summary" style="margin-bottom:0;"></div>
+  </div>
+
+  <div class="card">
+    <strong class="block-label">Nueva transacción</strong>
+    <div class="fin-form">
+      <select id="fin-type">
+        <option value="expense">Gasto</option>
+        <option value="income">Ingreso</option>
+      </select>
+      <input type="number" id="fin-amount" placeholder="Monto (Bs)" min="0" step="0.01">
+      <select id="fin-category"></select>
+      <input type="date" id="fin-date">
+      <input type="text" id="fin-note" placeholder="Nota (opcional)">
+      <button class="btn" id="fin-add-btn">Agregar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong class="block-label">Gastos por categoría (mes actual)</strong>
+    <div class="chart-wrap" style="height:200px;">
+      <canvas id="fin-chart" role="img" aria-label="Gráfico de barras de gastos por categoría del mes actual"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong class="block-label">Metas de ahorro</strong>
+    <div id="fin-goals"></div>
+    <div class="add-row">
+      <input type="text" id="new-goal-name" placeholder="Nombre de la meta">
+      <input type="number" id="new-goal-target" placeholder="Objetivo (Bs)" min="0" step="1" style="max-width:140px;">
+      <button class="btn" id="add-goal-btn">Crear meta</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong class="block-label">Historial (mes actual)</strong>
+    <div id="fin-history"></div>
+  </div>
+
+  <div class="card">
+    <strong class="block-label">Categorías</strong>
+    <div class="cat-cols">
+      <div class="cat-col">
+        <div class="sub" style="margin-bottom:6px;">Gastos</div>
+        <div id="fin-cat-expense" class="cat-chips"></div>
+        <div class="add-row"><input type="text" id="new-cat-expense" placeholder="Nueva categoría de gasto"><button class="btn" id="add-cat-expense-btn">+</button></div>
+      </div>
+      <div class="cat-col">
+        <div class="sub" style="margin-bottom:6px;">Ingresos</div>
+        <div id="fin-cat-income" class="cat-chips"></div>
+        <div class="add-row"><input type="text" id="new-cat-income" placeholder="Nueva categoría de ingreso"><button class="btn" id="add-cat-income-btn">+</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
