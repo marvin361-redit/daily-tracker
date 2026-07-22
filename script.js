@@ -18,7 +18,39 @@ const localStorageShim = {
   },
 };
 
-const S = (window.storage && typeof window.storage.get === 'function') ? window.storage : localStorageShim;
+let supabaseClient = null;
+let currentUserId = null;
+
+function initSupabase() {
+  if (typeof supabase === 'undefined' || typeof SUPABASE_URL === 'undefined') return null;
+  return supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+const supabaseStorage = {
+  async get(key) {
+    const { data, error } = await supabaseClient.from('kv_store').select('value').eq('key', key).eq('user_id', currentUserId).maybeSingle();
+    if (error || !data) throw new Error('Key not found: ' + key);
+    return { key, value: data.value, shared: false };
+  },
+  async set(key, value) {
+    const { error } = await supabaseClient.from('kv_store')
+      .upsert({ key, value, user_id: currentUserId, updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' });
+    if (error) throw error;
+    return { key, value, shared: false };
+  },
+  async delete(key) {
+    await supabaseClient.from('kv_store').delete().eq('key', key).eq('user_id', currentUserId);
+    return { key, deleted: true, shared: false };
+  },
+  async list(prefix) {
+    let q = supabaseClient.from('kv_store').select('key').eq('user_id', currentUserId);
+    if (prefix) q = q.like('key', prefix + '%');
+    const { data } = await q;
+    return { keys: (data || []).map(r => r.key), prefix, shared: false };
+  },
+};
+
+let S = (window.storage && typeof window.storage.get === 'function') ? window.storage : localStorageShim;
 
 const ENG_ACTIVITIES = [
   { id: 'temas', name: 'Temas', defaultMinutes: 45 },
@@ -843,5 +875,89 @@ function wireStaticEvents() {
   });
 }
 
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function clearAuthError() {
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleSignIn() {
+  clearAuthError();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { showAuthError('Completá correo y contraseña.'); return; }
+  document.getElementById('auth-status').textContent = 'Entrando...';
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  document.getElementById('auth-status').textContent = '';
+  if (error) { showAuthError(error.message); return; }
+  onAuthed(data.user);
+}
+
+async function handleSignUp() {
+  clearAuthError();
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { showAuthError('Completá correo y contraseña.'); return; }
+  if (password.length < 6) { showAuthError('La contraseña debe tener al menos 6 caracteres.'); return; }
+  document.getElementById('auth-status').textContent = 'Creando cuenta...';
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+  document.getElementById('auth-status').textContent = '';
+  if (error) { showAuthError(error.message); return; }
+  if (data.session) { onAuthed(data.user); }
+  else { document.getElementById('auth-status').textContent = 'Revisá tu correo para confirmar la cuenta, luego iniciá sesión.'; }
+}
+
+async function handleSignOut() {
+  await supabaseClient.auth.signOut();
+  document.body.classList.remove('authed');
+  document.getElementById('logout-btn').style.display = 'none';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-password').value = '';
+}
+
+function onAuthed(user) {
+  currentUserId = user.id;
+  S = supabaseStorage;
+  document.body.classList.add('authed');
+  document.getElementById('logout-btn').style.display = '';
+  load();
+}
+
+async function bootstrap() {
+  document.getElementById('logout-btn').addEventListener('click', handleSignOut);
+  document.getElementById('auth-signin-btn').addEventListener('click', handleSignIn);
+  document.getElementById('auth-signup-btn').addEventListener('click', handleSignUp);
+  document.getElementById('auth-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleSignIn(); });
+
+  if (window.storage && typeof window.storage.get === 'function') {
+    // Corriendo dentro de Claude.ai: no hace falta login, se usa su storage propio.
+    document.body.classList.add('authed');
+    load();
+    return;
+  }
+
+  supabaseClient = initSupabase();
+  if (!supabaseClient) {
+    showAuthError('No se pudo conectar con Supabase. Revisá supabase-config.js.');
+    return;
+  }
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    onAuthed(session.user);
+  }
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      document.body.classList.remove('authed');
+      document.getElementById('logout-btn').style.display = 'none';
+    }
+  });
+}
+
 wireStaticEvents();
-load();
+bootstrap();
