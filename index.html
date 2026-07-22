@@ -13,7 +13,23 @@
     <h1>Mi Daily Tracker</h1>
     <div class="sub" id="today-label">Cargando...</div>
   </div>
-  <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+  <div style="display:flex;gap:8px;">
+    <button class="theme-btn" id="logout-btn" title="Cerrar sesión" style="display:none;">⏻</button>
+    <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
+  </div>
+</div>
+
+<div class="card" id="auth-card" style="max-width:360px;margin-top:10px;">
+  <strong class="block-label" id="auth-title">Iniciar sesión</strong>
+  <div class="sub" style="margin-bottom:14px;">Tus datos se sincronizan entre todos tus dispositivos.</div>
+  <input type="email" id="auth-email" placeholder="Correo electrónico" style="width:100%;margin-bottom:8px;padding:8px 10px;">
+  <input type="password" id="auth-password" placeholder="Contraseña" style="width:100%;margin-bottom:8px;padding:8px 10px;">
+  <div id="auth-error" class="sub" style="color:var(--red);margin-bottom:8px;display:none;"></div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" id="auth-signin-btn" style="flex:1;">Entrar</button>
+    <button class="btn" id="auth-signup-btn" style="flex:1;background:var(--ink2);color:var(--text);border:1px solid var(--line);">Crear cuenta</button>
+  </div>
+  <div class="sub" id="auth-status" style="margin-top:10px;margin-bottom:0;"></div>
 </div>
 
 <div class="tabs">
@@ -193,6 +209,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="script.js"></script>
 </body>
