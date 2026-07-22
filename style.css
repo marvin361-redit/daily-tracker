@@ -151,3 +151,7 @@ textarea{ width:100%; resize:vertical; min-height:70px; }
 .goal-actions input{ width:100px; }
 
 .eng-min-input{ width:56px; text-align:center; padding:6px 4px; }
+
+body:not(.authed) .tabs, body:not(.authed) .view{ display:none !important; }
+body.authed #auth-card{ display:none; }
+#auth-card input{ background:var(--ink2); border:1px solid var(--line); color:var(--text); border-radius:6px; }
