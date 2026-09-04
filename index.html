@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css">
 
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E8A33D">
+<meta name="theme-color" content="#0B0B0C">
 <link rel="icon" href="favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,10 +22,13 @@
     <h1>Mi Daily Tracker</h1>
     <div class="sub" id="today-label">Cargando...</div>
   </div>
-  <div style="display:flex;gap:8px;">
-    <button class="theme-btn" id="logout-btn" title="Cerrar sesión" style="display:none;">⏻</button>
-    <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Cambiar tema">🌙</button>
-  </div>
+  <button class="icon-btn" id="logout-btn" title="Cerrar sesión" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline>
+      <line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+  </button>
 </div>
 
 <div class="card" id="auth-card" style="max-width:360px;margin-top:10px;">
@@ -137,6 +140,16 @@
     </div>
     <div class="row"><strong id="eng-day-title">Actividades de hoy</strong></div>
     <div id="eng-list"></div>
+
+    <div class="eng-activities-editor">
+      <strong class="block-label" style="font-size:13px;">Gestionar actividades</strong>
+      <div id="eng-activities-editor"></div>
+      <div class="add-row">
+        <input type="text" id="new-eng-activity-name" placeholder="Nueva actividad (ej: Podcast)">
+        <input type="number" id="new-eng-activity-minutes" placeholder="Min. típicos" min="0" max="1440" step="1" style="max-width:110px;">
+        <button class="btn" id="add-eng-activity-btn">Agregar</button>
+      </div>
+    </div>
   </div>
   <div class="card">
     <div class="row"><strong>Meta semanal</strong><span class="sub" style="margin:0" id="eng-week-hours"></span></div>
