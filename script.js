@@ -52,13 +52,15 @@ const supabaseStorage = {
 
 let S = (window.storage && typeof window.storage.get === 'function') ? window.storage : localStorageShim;
 
-const ENG_ACTIVITIES = [
-  { id: 'temas', name: 'Temas', defaultMinutes: 45 },
-  { id: 'anki', name: 'Anki', defaultMinutes: 25 },
-  { id: 'shadowing', name: 'Shadowing', defaultMinutes: 25 },
-  { id: 'diario', name: 'Diario', defaultMinutes: 15 },
-  { id: 'libro', name: 'Libro', defaultMinutes: 30 },
-];
+function defaultEngActivities() {
+  return [
+    { id: 'temas', name: 'Temas', defaultMinutes: 45 },
+    { id: 'anki', name: 'Anki', defaultMinutes: 25 },
+    { id: 'shadowing', name: 'Shadowing', defaultMinutes: 25 },
+    { id: 'diario', name: 'Diario', defaultMinutes: 15 },
+    { id: 'libro', name: 'Libro', defaultMinutes: 30 },
+  ];
+}
 const ENG_LEVELS = [
   { name: 'B2', hours: 700 },
   { name: 'C1', hours: 1000 },
@@ -73,6 +75,7 @@ const DEFAULT_INCOME_CATS = ['Sueldo', 'Freelance', 'Regalo', 'Otros'];
 
 let habits = [];
 let logs = {};
+let engActivities = [];
 let engLogs = {};
 let engBase = DEFAULT_ENG_BASE;
 let engWeekGoal = DEFAULT_ENG_GOAL;
@@ -125,7 +128,7 @@ async function saveEngLogs() { await S.set('eng-logs', JSON.stringify(engLogs), 
 async function saveEngBaseValue() { await S.set('eng-base', String(engBase), false); }
 async function saveEngGoalValue() { await S.set('eng-goal', String(engWeekGoal), false); }
 async function saveNotes() { await S.set('notes', JSON.stringify(notes), false); }
-async function saveTheme(mode) { await S.set('theme', mode, false); }
+async function saveEngActivities() { await S.set('eng-activities', JSON.stringify(engActivities), false); }
 async function saveFinTx() { await S.set('fin-tx', JSON.stringify(finTx), false); }
 async function saveFinCatExpense() { await S.set('fin-cat-expense', JSON.stringify(finCatExpense), false); }
 async function saveFinCatIncome() { await S.set('fin-cat-income', JSON.stringify(finCatIncome), false); }
@@ -153,11 +156,19 @@ async function load() {
   const rawLogs = await safeGet('logs');
   try { logs = rawLogs ? JSON.parse(rawLogs) : {}; } catch (e) { logs = {}; }
 
+  const rawEngActivities = await safeGet('eng-activities');
+  if (rawEngActivities) {
+    try { engActivities = JSON.parse(rawEngActivities); } catch (e) { engActivities = defaultEngActivities(); }
+  } else {
+    engActivities = defaultEngActivities();
+    await saveEngActivities();
+  }
+
   const rawEngLogs = await safeGet('eng-logs');
   try { engLogs = rawEngLogs ? JSON.parse(rawEngLogs) : {}; } catch (e) { engLogs = {}; }
   let engMigrated = false;
   Object.keys(engLogs).forEach(ds => {
-    ENG_ACTIVITIES.forEach(a => {
+    engActivities.forEach(a => {
       const v = engLogs[ds][a.id];
       if (v === true) { engLogs[ds][a.id] = a.defaultMinutes; engMigrated = true; }
       else if (v === false) { delete engLogs[ds][a.id]; engMigrated = true; }
@@ -170,12 +181,6 @@ async function load() {
 
   const rawNotes = await safeGet('notes');
   try { notes = rawNotes ? JSON.parse(rawNotes) : {}; } catch (e) { notes = {}; }
-
-  const theme = await safeGet('theme');
-  if (theme === 'light') {
-    document.body.setAttribute('data-theme', 'light');
-    document.getElementById('theme-toggle').textContent = '☀️';
-  }
 
   const rawTx = await safeGet('fin-tx');
   try { finTx = rawTx ? JSON.parse(rawTx) : []; } catch (e) { finTx = []; }
@@ -215,20 +220,6 @@ async function load() {
   render();
 }
 
-function toggleTheme() {
-  const isLight = document.body.getAttribute('data-theme') === 'light';
-  if (isLight) {
-    document.body.removeAttribute('data-theme');
-    document.getElementById('theme-toggle').textContent = '🌙';
-    saveTheme('dark');
-  } else {
-    document.body.setAttribute('data-theme', 'light');
-    document.getElementById('theme-toggle').textContent = '☀️';
-    saveTheme('light');
-  }
-  if (document.getElementById('view-analytics').classList.contains('active')) renderTrendChart();
-}
-
 function toggle(date, habitId) {
   logs[date] = logs[date] || {};
   logs[date][habitId] = !logs[date][habitId];
@@ -237,7 +228,7 @@ function toggle(date, habitId) {
 }
 
 function toggleEng(date, actId) {
-  const a = ENG_ACTIVITIES.find(x => x.id === actId);
+  const a = engActivities.find(x => x.id === actId);
   engLogs[date] = engLogs[date] || {};
   const current = engLogs[date][actId] || 0;
   engLogs[date][actId] = current > 0 ? 0 : (a ? a.defaultMinutes : 0);
@@ -260,6 +251,57 @@ function selectEngDay(ds) {
   const jump = document.getElementById('eng-date-jump');
   if (jump) jump.value = ds;
   renderIngles();
+}
+
+function addEngActivity() {
+  const nameInp = document.getElementById('new-eng-activity-name');
+  const minInp = document.getElementById('new-eng-activity-minutes');
+  const name = nameInp.value.trim();
+  let mins = parseInt(minInp.value, 10);
+  if (!name) return;
+  if (isNaN(mins) || mins < 0) mins = 0;
+  if (mins > 1440) mins = 1440;
+  engActivities.push({ id: 'ea' + Date.now(), name, defaultMinutes: mins });
+  nameInp.value = ''; minInp.value = '';
+  saveEngActivities();
+  renderIngles();
+}
+
+function renameEngActivity(id, name) {
+  const a = engActivities.find(x => x.id === id);
+  const trimmed = name.trim();
+  if (a && trimmed) { a.name = trimmed; saveEngActivities(); renderIngles(); }
+}
+
+function setEngActivityDefaultMinutes(id, val) {
+  const a = engActivities.find(x => x.id === id);
+  if (!a) return;
+  let mins = parseInt(val, 10);
+  if (isNaN(mins) || mins < 0) mins = 0;
+  if (mins > 1440) mins = 1440;
+  a.defaultMinutes = mins;
+  saveEngActivities();
+  renderIngles();
+}
+
+function deleteEngActivity(id) {
+  if (engActivities.length <= 1) return;
+  engActivities = engActivities.filter(a => a.id !== id);
+  Object.keys(engLogs).forEach(ds => { if (engLogs[ds]) delete engLogs[ds][id]; });
+  saveEngActivities();
+  saveEngLogs();
+  renderIngles();
+}
+
+function renderEngActivitiesEditor() {
+  const el = document.getElementById('eng-activities-editor');
+  if (!el) return;
+  el.innerHTML = engActivities.map(a => `
+    <div class="habit-item">
+      <input type="text" value="${a.name}" data-rename-eng-activity="${a.id}">
+      <input type="number" min="0" max="1440" value="${a.defaultMinutes}" title="Minutos típicos" data-eng-activity-minutes="${a.id}">
+      <button class="danger" data-delete-eng-activity="${a.id}" ${engActivities.length <= 1 ? 'disabled title="Debe quedar al menos una actividad"' : ''}>Eliminar</button>
+    </div>`).join('');
 }
 
 function saveNote(val) {
@@ -290,7 +332,7 @@ function getWeekDates(d) {
 function engHoursFromLogs() {
   let totalMinutes = 0;
   Object.keys(engLogs).forEach(ds => {
-    ENG_ACTIVITIES.forEach(a => {
+    engActivities.forEach(a => {
       const mins = (engLogs[ds] && engLogs[ds][a.id]) || 0;
       if (mins > 0) totalMinutes += mins;
     });
@@ -384,7 +426,7 @@ function renderHoy() {
   const pct = dayPct(selectedDate);
   const ring = document.getElementById('hoy-ring');
   ring.textContent = pct + '%';
-  const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--amber)' : 'var(--red)';
+  const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--accent)' : 'var(--red)';
   ring.style.borderColor = color;
   ring.style.color = color;
 
@@ -433,7 +475,7 @@ function renderGoals() {
         <span style="font-size:13px;">${h.name}</span>
         <span style="font-size:12px;color:${met ? 'var(--green)' : 'var(--muted)'};">${done}/${goal}</span>
       </div>
-      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${met ? 'var(--green)' : 'var(--amber)'};"></div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${met ? 'var(--green)' : 'var(--accent)'};"></div></div>
     </div>`;
   }).join('');
 }
@@ -489,7 +531,7 @@ function renderAnalytics() {
     </div>`).join('') : '<div class="empty">Aún no hay datos suficientes.</div>';
 
   document.getElementById('an-rank').innerHTML = stats.slice(0, 5).map((s, i) => `
-    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${s.name}</span><span style="color:var(--amber);font-weight:600;">${s.pct}%</span></div>`
+    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${s.name}</span><span style="color:var(--accent);font-weight:600;">${s.pct}%</span></div>`
   ).join('') || '<div class="empty">-</div>';
 
   if (document.getElementById('view-analytics').classList.contains('active')) renderTrendChart();
@@ -510,9 +552,8 @@ function renderTrendChart() {
     vals.push(dayPct(fmt(x)));
   }
 
-  const isLight = document.body.getAttribute('data-theme') === 'light';
-  const gridColor = isLight ? '#e1e0d9' : '#2c2c2a';
-  const textColor = isLight ? '#7A756A' : '#8B8F9B';
+  const gridColor = '#2B2C2F';
+  const textColor = '#8C8D90';
 
   if (trendChart) {
     trendChart.data.labels = labels;
@@ -575,7 +616,7 @@ function renderIngles() {
   document.getElementById('eng-day-title').textContent =
     'Actividades de ' + (isToday ? 'hoy' : dLabelFull) + (isToday ? '' : ' (editando)');
 
-  document.getElementById('eng-list').innerHTML = ENG_ACTIVITIES.map(a => {
+  document.getElementById('eng-list').innerHTML = engActivities.map(a => {
     const mins = (engLogs[engSelectedDate] || {})[a.id] || 0;
     const on = mins > 0;
     return `<div class="habit-item">
@@ -595,14 +636,14 @@ function renderIngles() {
         <span style="font-size:13px;">${lv.name}<span style="color:var(--muted);"> · ${lv.hours}h</span></span>
         <span style="font-size:12px;color:${reached ? 'var(--green)' : 'var(--muted)'};">${reached ? 'Alcanzado' : 'Faltan ' + remaining.toFixed(1) + 'h'}</span>
       </div>
-      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${reached ? 'var(--green)' : 'var(--amber)'};"></div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${reached ? 'var(--green)' : 'var(--accent)'};"></div></div>
     </div>`;
   }).join('');
 
   const weekDates = getWeekDates(new Date());
   let weekMinutes = 0;
   weekDates.forEach(ds => {
-    ENG_ACTIVITIES.forEach(a => { weekMinutes += (engLogs[ds] && engLogs[ds][a.id]) || 0; });
+    engActivities.forEach(a => { weekMinutes += (engLogs[ds] && engLogs[ds][a.id]) || 0; });
   });
   const weekHours = Math.max(0, weekMinutes / 60);
   document.getElementById('eng-goal-input').value = engWeekGoal;
@@ -610,7 +651,7 @@ function renderIngles() {
   const weekPct = engWeekGoal > 0 ? Math.min(100, Math.round((weekHours / engWeekGoal) * 100)) : 0;
   const wbar = document.getElementById('eng-week-bar');
   wbar.style.width = weekPct + '%';
-  wbar.style.background = weekHours >= engWeekGoal && engWeekGoal > 0 ? 'var(--green)' : 'var(--amber)';
+  wbar.style.background = weekHours >= engWeekGoal && engWeekGoal > 0 ? 'var(--green)' : 'var(--accent)';
 
   const last7 = [];
   const dd = new Date();
@@ -618,7 +659,7 @@ function renderIngles() {
   document.getElementById('eng-history').innerHTML = last7.map(ds => {
     const dLabel = new Date(ds + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
     const dayLog = engLogs[ds] || {};
-    const pills = ENG_ACTIVITIES.map(a => {
+    const pills = engActivities.map(a => {
       const mins = dayLog[a.id] || 0;
       return `<span class="pill ${mins > 0 ? 'on' : ''}">${a.name}${mins > 0 ? ' · ' + mins + 'm' : ''}</span>`;
     }).join('');
@@ -628,6 +669,8 @@ function renderIngles() {
       <div style="display:flex;gap:6px;flex-wrap:wrap;">${pills}</div>
     </div>`;
   }).join('');
+
+  renderEngActivitiesEditor();
 }
 
 function addTransaction() {
@@ -751,7 +794,7 @@ function renderFinGoals() {
         <span style="font-size:13px;">${g.name}</span>
         <span style="font-size:12px;color:${done ? 'var(--green)' : 'var(--muted)'};">${money(g.saved)} / ${money(g.target)}</span>
       </div>
-      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${done ? 'var(--green)' : 'var(--amber)'};"></div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${done ? 'var(--green)' : 'var(--accent)'};"></div></div>
       <div class="goal-actions">
         <input type="number" min="0" step="1" placeholder="Bs a agregar" data-goal-input="${g.id}">
         <button class="btn" data-add-funds="${g.id}">Agregar</button>
@@ -814,9 +857,8 @@ function renderFinChart() {
   const labels = Object.keys(byCat);
   const vals = Object.values(byCat);
 
-  const isLight = document.body.getAttribute('data-theme') === 'light';
-  const gridColor = isLight ? '#e1e0d9' : '#2c2c2a';
-  const textColor = isLight ? '#7A756A' : '#8B8F9B';
+  const gridColor = '#2B2C2F';
+  const textColor = '#8C8D90';
 
   if (finChart) {
     finChart.data.labels = labels;
@@ -1036,6 +1078,7 @@ function wireStaticEvents() {
   });
 
   document.getElementById('add-habit-btn').addEventListener('click', addHabit);
+  document.getElementById('add-eng-activity-btn').addEventListener('click', addEngActivity);
   document.getElementById('new-habit').addEventListener('keydown', e => { if (e.key === 'Enter') addHabit(); });
   document.getElementById('save-eng-base-btn').addEventListener('click', saveEngBase);
   document.getElementById('day-note').addEventListener('change', e => saveNote(e.target.value));
@@ -1059,7 +1102,7 @@ function wireStaticEvents() {
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
 
   document.body.addEventListener('click', e => {
-    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan]');
+    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity]');
     if (!t) return;
     if (t.dataset.toggleHabit) { toggle(selectedDate, t.dataset.toggleHabit); }
     else if (t.dataset.selectDay) { selectDay(t.dataset.selectDay); }
@@ -1085,6 +1128,7 @@ function wireStaticEvents() {
       if (input) saveSavingAmount(t.dataset.saveSaving, input.value);
     }
     else if (t.dataset.deleteSavingPlan) { deleteSavingsPlan(t.dataset.deleteSavingPlan); }
+    else if (t.dataset.deleteEngActivity) { deleteEngActivity(t.dataset.deleteEngActivity); }
   });
 
   document.body.addEventListener('change', e => {
@@ -1092,6 +1136,8 @@ function wireStaticEvents() {
     if (t.dataset.renameHabit) renameHabit(t.dataset.renameHabit, t.value);
     else if (t.dataset.goalHabit) setHabitGoal(t.dataset.goalHabit, t.value);
     else if (t.dataset.engMinutes) setEngMinutes(engSelectedDate, t.dataset.engMinutes, t.value);
+    else if (t.dataset.renameEngActivity) renameEngActivity(t.dataset.renameEngActivity, t.value);
+    else if (t.dataset.engActivityMinutes) setEngActivityDefaultMinutes(t.dataset.engActivityMinutes, t.value);
   });
 }
 
