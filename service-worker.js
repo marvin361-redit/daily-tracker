@@ -11,7 +11,11 @@ const APP_SHELL = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).catch(() => {})
+    caches.open(CACHE_NAME).then(cache =>
+      // cache.addAll() is all-or-nothing: a single 404/network hiccup on any
+      // one asset would otherwise abort caching of every other asset too.
+      Promise.all(APP_SHELL.map(url => cache.add(url).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });

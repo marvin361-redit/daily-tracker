@@ -18,7 +18,14 @@
 <body>
 
 <div class="topbar">
-  <div>
+  <button class="icon-btn" id="menu-btn" title="Menú" aria-label="Abrir menú">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="4" y1="6" x2="20" y2="6"></line>
+      <line x1="4" y1="12" x2="20" y2="12"></line>
+      <line x1="4" y1="18" x2="20" y2="18"></line>
+    </svg>
+  </button>
+  <div class="topbar-title">
     <h1>Mi Daily Tracker</h1>
     <div class="sub" id="today-label">Cargando...</div>
   </div>
@@ -30,6 +37,29 @@
     </svg>
   </button>
 </div>
+
+<div id="sync-error" class="sync-banner" style="display:none;"></div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<nav class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-header">
+    <strong>Menú</strong>
+    <button class="icon-btn" id="close-menu-btn" aria-label="Cerrar menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+  <div class="nav-item active" data-view="hoy">Hoy</div>
+  <div class="nav-item" data-view="mes">Mes</div>
+  <div class="nav-item" data-view="analytics">Analíticas</div>
+  <div class="nav-item" data-view="editar">Editar hábitos</div>
+  <div class="nav-item" data-view="ingles">Inglés</div>
+  <div class="nav-item" data-view="finanzas">Finanzas</div>
+</nav>
+
+<h2 class="view-title" id="view-title">Hoy</h2>
 
 <div class="card" id="auth-card" style="max-width:360px;margin-top:10px;">
   <strong class="block-label" id="auth-title">Iniciar sesión</strong>
@@ -44,15 +74,7 @@
   <div class="sub" id="auth-status" style="margin-top:10px;margin-bottom:0;"></div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-view="hoy">Hoy</div>
-  <div class="tab" data-view="mes">Mes</div>
-  <div class="tab" data-view="analytics">Analíticas</div>
-  <div class="tab" data-view="editar">Editar hábitos</div>
-  <div class="tab" data-view="ingles">Inglés</div>
-  <div class="tab" data-view="finanzas">Finanzas</div>
-</div>
-
+<div id="app-views">
 <div class="view active" id="view-hoy">
   <div class="card">
     <div class="date-jump">
@@ -142,7 +164,7 @@
     <div id="eng-list"></div>
 
     <div class="eng-activities-editor">
-      <strong class="block-label" style="font-size:13px;">Gestionar actividades</strong>
+      <strong class="block-label" style="font-size:13px;">✏️ Editar / agregar tus actividades de inglés</strong>
       <div id="eng-activities-editor"></div>
       <div class="add-row">
         <input type="text" id="new-eng-activity-name" placeholder="Nueva actividad (ej: Podcast)">
@@ -258,6 +280,7 @@
       </div>
     </div>
   </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
