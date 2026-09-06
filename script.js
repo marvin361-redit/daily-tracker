@@ -1,7 +1,9 @@
+class NotFoundError extends Error {}
+
 const localStorageShim = {
   async get(key) {
     const raw = localStorage.getItem(key);
-    if (raw === null) throw new Error('Key not found: ' + key);
+    if (raw === null) throw new NotFoundError('Key not found: ' + key);
     return { key, value: raw, shared: false };
   },
   async set(key, value) {
@@ -29,7 +31,8 @@ function initSupabase() {
 const supabaseStorage = {
   async get(key) {
     const { data, error } = await supabaseClient.from('kv_store').select('value').eq('key', key).eq('user_id', currentUserId).maybeSingle();
-    if (error || !data) throw new Error('Key not found: ' + key);
+    if (error) throw error;
+    if (!data) throw new NotFoundError('Key not found: ' + key);
     return { key, value: data.value, shared: false };
   },
   async set(key, value) {
@@ -97,6 +100,10 @@ let monthCursor = new Date();
 function fmt(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
 function pad(n) { return String(n).padStart(2, '0'); }
 
+function esc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 function clampNonNegative(n, fallback) {
   const v = parseFloat(n);
   if (isNaN(v) || v < 0) return fallback !== undefined ? fallback : 0;
@@ -118,23 +125,48 @@ async function safeGet(key) {
     const r = await S.get(key, false);
     return r ? r.value : null;
   } catch (e) {
-    return null;
+    if (e instanceof NotFoundError) return null;
+    // Real error (network, RLS, etc.) — rethrow so the caller does not
+    // mistake "couldn't reach the server" for "there is no data yet".
+    throw e;
   }
 }
 
-async function saveHabits() { await S.set('habits', JSON.stringify(habits), false); }
-async function saveLogs() { await S.set('logs', JSON.stringify(logs), false); }
-async function saveEngLogs() { await S.set('eng-logs', JSON.stringify(engLogs), false); }
-async function saveEngBaseValue() { await S.set('eng-base', String(engBase), false); }
-async function saveEngGoalValue() { await S.set('eng-goal', String(engWeekGoal), false); }
-async function saveNotes() { await S.set('notes', JSON.stringify(notes), false); }
-async function saveEngActivities() { await S.set('eng-activities', JSON.stringify(engActivities), false); }
-async function saveFinTx() { await S.set('fin-tx', JSON.stringify(finTx), false); }
-async function saveFinCatExpense() { await S.set('fin-cat-expense', JSON.stringify(finCatExpense), false); }
-async function saveFinCatIncome() { await S.set('fin-cat-income', JSON.stringify(finCatIncome), false); }
-async function saveFinGoals() { await S.set('fin-goals', JSON.stringify(finGoals), false); }
-async function saveFinSavingsPlans() { await S.set('fin-savings-plans', JSON.stringify(finSavingsPlans), false); }
-async function saveFinSavingsLog() { await S.set('fin-savings-log', JSON.stringify(finSavingsLog), false); }
+function showSyncError(msg) {
+  const el = document.getElementById('sync-error');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function clearSyncError() {
+  const el = document.getElementById('sync-error');
+  if (el) el.style.display = 'none';
+}
+
+async function guardedSave(key, serialize) {
+  try {
+    await S.set(key, serialize(), false);
+    clearSyncError();
+  } catch (e) {
+    console.error('Error guardando "' + key + '":', e);
+    showSyncError('No se pudo guardar. Revisá tu conexión — tus últimos cambios podrían no haberse sincronizado.');
+  }
+}
+
+async function saveHabits() { await guardedSave('habits', () => JSON.stringify(habits)); }
+async function saveLogs() { await guardedSave('logs', () => JSON.stringify(logs)); }
+async function saveEngLogs() { await guardedSave('eng-logs', () => JSON.stringify(engLogs)); }
+async function saveEngBaseValue() { await guardedSave('eng-base', () => String(engBase)); }
+async function saveEngGoalValue() { await guardedSave('eng-goal', () => String(engWeekGoal)); }
+async function saveNotes() { await guardedSave('notes', () => JSON.stringify(notes)); }
+async function saveEngActivities() { await guardedSave('eng-activities', () => JSON.stringify(engActivities)); }
+async function saveFinTx() { await guardedSave('fin-tx', () => JSON.stringify(finTx)); }
+async function saveFinCatExpense() { await guardedSave('fin-cat-expense', () => JSON.stringify(finCatExpense)); }
+async function saveFinCatIncome() { await guardedSave('fin-cat-income', () => JSON.stringify(finCatIncome)); }
+async function saveFinGoals() { await guardedSave('fin-goals', () => JSON.stringify(finGoals)); }
+async function saveFinSavingsPlans() { await guardedSave('fin-savings-plans', () => JSON.stringify(finSavingsPlans)); }
+async function saveFinSavingsLog() { await guardedSave('fin-savings-log', () => JSON.stringify(finSavingsLog)); }
 
 function money(n) {
   const v = Math.round((n + Number.EPSILON) * 100) / 100;
@@ -142,6 +174,18 @@ function money(n) {
 }
 
 async function load() {
+  try {
+    await loadData();
+    clearSyncError();
+  } catch (e) {
+    console.error('Error cargando datos:', e);
+    showSyncError('No se pudieron cargar tus datos (revisá tu conexión). Los cambios que hagas ahora podrían no reflejar tu historial real hasta reconectar.');
+    return;
+  }
+  render();
+}
+
+async function loadData() {
   const rawHabits = await safeGet('habits');
   if (rawHabits) {
     try { habits = JSON.parse(rawHabits); } catch (e) { habits = defaultHabits(); }
@@ -216,8 +260,6 @@ async function load() {
   if (hoyJump) hoyJump.value = selectedDate;
   const engJump = document.getElementById('eng-date-jump');
   if (engJump) engJump.value = engSelectedDate;
-
-  render();
 }
 
 function toggle(date, habitId) {
@@ -286,6 +328,8 @@ function setEngActivityDefaultMinutes(id, val) {
 
 function deleteEngActivity(id) {
   if (engActivities.length <= 1) return;
+  const a = engActivities.find(x => x.id === id);
+  if (!confirm(`¿Eliminar la actividad "${a ? a.name : ''}" y sus minutos registrados en el historial?`)) return;
   engActivities = engActivities.filter(a => a.id !== id);
   Object.keys(engLogs).forEach(ds => { if (engLogs[ds]) delete engLogs[ds][id]; });
   saveEngActivities();
@@ -298,7 +342,7 @@ function renderEngActivitiesEditor() {
   if (!el) return;
   el.innerHTML = engActivities.map(a => `
     <div class="habit-item">
-      <input type="text" value="${a.name}" data-rename-eng-activity="${a.id}">
+      <input type="text" value="${esc(a.name)}" data-rename-eng-activity="${a.id}">
       <input type="number" min="0" max="1440" value="${a.defaultMinutes}" title="Minutos típicos" data-eng-activity-minutes="${a.id}">
       <button class="danger" data-delete-eng-activity="${a.id}" ${engActivities.length <= 1 ? 'disabled title="Debe quedar al menos una actividad"' : ''}>Eliminar</button>
     </div>`).join('');
@@ -392,6 +436,8 @@ function renameHabit(id, name) {
 }
 
 function deleteHabit(id) {
+  const h = habits.find(x => x.id === id);
+  if (!confirm(`¿Eliminar el hábito "${h ? h.name : ''}"? Se borra también todo su historial marcado.`)) return;
   habits = habits.filter(h => h.id !== id);
   Object.keys(logs).forEach(ds => { if (logs[ds]) delete logs[ds][id]; });
   saveHabits();
@@ -438,16 +484,13 @@ function renderHoy() {
       const on = (logs[selectedDate] || {})[h.id];
       return `<div class="habit-item">
         <div class="chk ${on ? 'on' : ''}" data-toggle-habit="${h.id}"></div>
-        <span>${h.name}</span>
+        <span>${esc(h.name)}</span>
       </div>`;
     }).join('');
   }
 
   const wr = document.getElementById('week-days');
-  const start = new Date(d);
-  start.setDate(d.getDate() - d.getDay() + 1);
-  const days = [];
-  for (let i = 0; i < 7; i++) { const x = new Date(start); x.setDate(start.getDate() + i); days.push(x); }
+  const days = getWeekDates(d).map(ds => new Date(ds + 'T00:00:00'));
   document.getElementById('week-range').textContent =
     `${days[0].getDate()} ${MONTHS[days[0].getMonth()].slice(0, 3)} - ${days[6].getDate()} ${MONTHS[days[6].getMonth()].slice(0, 3)}`;
   wr.innerHTML = days.map(x => {
@@ -472,7 +515,7 @@ function renderGoals() {
     const met = done >= goal;
     return `<div class="goal-row">
       <div class="row">
-        <span style="font-size:13px;">${h.name}</span>
+        <span style="font-size:13px;">${esc(h.name)}</span>
         <span style="font-size:12px;color:${met ? 'var(--green)' : 'var(--muted)'};">${done}/${goal}</span>
       </div>
       <div class="barwrap"><div class="bar" style="width:${pct}%;background:${met ? 'var(--green)' : 'var(--accent)'};"></div></div>
@@ -487,13 +530,16 @@ function renderMes() {
   const daysInMonth = new Date(y, m + 1, 0).getDate();
   const dates = Array.from({ length: daysInMonth }, (_, i) => `${y}-${pad(m + 1)}-${pad(i + 1)}`);
 
+  const todayStr = fmt(new Date());
   let totalDone = 0, totalPossible = 0;
   let html = '<tr><th style="text-align:left;">Hábito</th>' + dates.map(ds => `<th>${+ds.slice(-2)}</th>`).join('') + '</tr>';
   habits.forEach(h => {
-    html += `<tr><td class="hname">${h.name}</td>` + dates.map(ds => {
+    html += `<tr><td class="hname">${esc(h.name)}</td>` + dates.map(ds => {
       const on = (logs[ds] || {})[h.id];
-      if (on) totalDone++;
-      totalPossible++;
+      if (ds <= todayStr) {
+        if (on) totalDone++;
+        totalPossible++;
+      }
       return `<td><div class="chk small ${on ? 'on' : ''}" data-toggle-month="${ds}|${h.id}"></div></td>`;
     }).join('') + '</tr>';
   });
@@ -508,6 +554,7 @@ function renderAnalytics() {
 
   let streak = 0;
   let d = new Date();
+  if (!logs[fmt(d)]) d.setDate(d.getDate() - 1); // hoy sin ninguna marca todavía: no cuenta como racha rota
   while (dayPct(fmt(d)) > 0) { streak++; d.setDate(d.getDate() - 1); }
   document.getElementById('an-streak').textContent = streak;
 
@@ -525,13 +572,13 @@ function renderAnalytics() {
 
   document.getElementById('an-bars').innerHTML = stats.length ? stats.map(s => `
     <div class="row" style="gap:10px;">
-      <span style="width:150px;font-size:12px;flex-shrink:0;">${s.name}</span>
+      <span style="width:150px;font-size:12px;flex-shrink:0;">${esc(s.name)}</span>
       <div class="barwrap"><div class="bar" style="width:${s.pct}%"></div></div>
       <span style="width:36px;text-align:right;font-size:12px;color:var(--muted);">${s.pct}%</span>
     </div>`).join('') : '<div class="empty">Aún no hay datos suficientes.</div>';
 
   document.getElementById('an-rank').innerHTML = stats.slice(0, 5).map((s, i) => `
-    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${s.name}</span><span style="color:var(--accent);font-weight:600;">${s.pct}%</span></div>`
+    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${esc(s.name)}</span><span style="color:var(--accent);font-weight:600;">${s.pct}%</span></div>`
   ).join('') || '<div class="empty">-</div>';
 
   if (document.getElementById('view-analytics').classList.contains('active')) renderTrendChart();
@@ -597,7 +644,7 @@ function renderEditor() {
   const ed = document.getElementById('habit-editor');
   ed.innerHTML = habits.length ? habits.map(h => `
     <div class="habit-item">
-      <input type="text" value="${h.name}" data-rename-habit="${h.id}">
+      <input type="text" value="${esc(h.name)}" data-rename-habit="${h.id}">
       <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" data-goal-habit="${h.id}">
       <button class="danger" data-delete-habit="${h.id}">Eliminar</button>
     </div>`).join('') : '<div class="empty">No tenés hábitos todavía. Agregá uno abajo.</div>';
@@ -621,7 +668,7 @@ function renderIngles() {
     const on = mins > 0;
     return `<div class="habit-item">
       <div class="chk ${on ? 'on' : ''}" data-toggle-eng="${a.id}" title="Tap para usar el tiempo típico (${a.defaultMinutes} min)"></div>
-      <span style="flex:1;">${a.name}</span>
+      <span style="flex:1;">${esc(a.name)}</span>
       <input type="number" class="eng-min-input" min="0" max="1440" step="1" placeholder="${a.defaultMinutes}" value="${mins || ''}" data-eng-minutes="${a.id}">
       <span class="sub" style="margin:0;">min</span>
     </div>`;
@@ -661,7 +708,7 @@ function renderIngles() {
     const dayLog = engLogs[ds] || {};
     const pills = engActivities.map(a => {
       const mins = dayLog[a.id] || 0;
-      return `<span class="pill ${mins > 0 ? 'on' : ''}">${a.name}${mins > 0 ? ' · ' + mins + 'm' : ''}</span>`;
+      return `<span class="pill ${mins > 0 ? 'on' : ''}">${esc(a.name)}${mins > 0 ? ' · ' + mins + 'm' : ''}</span>`;
     }).join('');
     const active = ds === engSelectedDate;
     return `<div class="history-row ${active ? 'active-row' : ''}" data-select-eng-day="${ds}" style="cursor:pointer;">
@@ -695,6 +742,8 @@ function addTransaction() {
 }
 
 function deleteTransaction(id) {
+  const t = finTx.find(x => x.id === id);
+  if (!confirm(`¿Eliminar este movimiento${t ? ' de ' + money(t.amount) : ''}?`)) return;
   finTx = finTx.filter(t => t.id !== id);
   saveFinTx();
   renderFinanzas();
@@ -705,7 +754,7 @@ function populateFinCategorySelect() {
   const cats = type === 'income' ? finCatIncome : finCatExpense;
   const sel = document.getElementById('fin-category');
   const prev = sel.value;
-  sel.innerHTML = cats.length ? cats.map(c => `<option value="${c}">${c}</option>`).join('') : '<option value="Otros">Otros</option>';
+  sel.innerHTML = cats.length ? cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('') : '<option value="Otros">Otros</option>';
   if (cats.includes(prev)) sel.value = prev;
 }
 
@@ -751,6 +800,8 @@ function addFundsToGoal(id, rawAmount) {
 }
 
 function deleteGoal(id) {
+  const g = finGoals.find(x => x.id === id);
+  if (!confirm(`¿Eliminar la meta "${g ? g.name : ''}"? Perderás el registro de lo ahorrado.`)) return;
   finGoals = finGoals.filter(g => g.id !== id);
   saveFinGoals();
   renderFinanzas();
@@ -791,7 +842,7 @@ function renderFinGoals() {
     const done = g.saved >= g.target;
     return `<div class="goal-row">
       <div class="row">
-        <span style="font-size:13px;">${g.name}</span>
+        <span style="font-size:13px;">${esc(g.name)}</span>
         <span style="font-size:12px;color:${done ? 'var(--green)' : 'var(--muted)'};">${money(g.saved)} / ${money(g.target)}</span>
       </div>
       <div class="barwrap"><div class="bar" style="width:${pct}%;background:${done ? 'var(--green)' : 'var(--accent)'};"></div></div>
@@ -814,9 +865,9 @@ function renderFinHistory() {
       return `<div class="fin-row fin-edit-row" data-tx-edit-row="${t.id}">
         <span class="fin-cat">${t.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
         <input type="number" min="0" step="0.01" value="${t.amount}" data-edit-amount style="width:80px;">
-        <select data-edit-category style="width:130px;">${cats.map(c => `<option value="${c}" ${c === t.category ? 'selected' : ''}>${c}</option>`).join('')}</select>
+        <select data-edit-category style="width:130px;">${cats.map(c => `<option value="${esc(c)}" ${c === t.category ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
         <input type="date" value="${t.date}" data-edit-date style="width:140px;">
-        <input type="text" value="${t.note || ''}" data-edit-note placeholder="Nota" style="flex:1;min-width:100px;">
+        <input type="text" value="${esc(t.note || '')}" data-edit-note placeholder="Nota" style="flex:1;min-width:100px;">
         <button class="btn" data-save-edit-tx="${t.id}">Guardar</button>
         <button class="ghost" data-cancel-edit-tx="${t.id}">Cancelar</button>
       </div>`;
@@ -825,8 +876,8 @@ function renderFinHistory() {
     const color = t.type === 'income' ? 'var(--green)' : 'var(--red)';
     return `<div class="fin-row">
       <span class="fin-date">${t.date.slice(5)}</span>
-      <span class="fin-cat">${t.category}</span>
-      <span class="fin-note">${t.note || ''}</span>
+      <span class="fin-cat">${esc(t.category)}</span>
+      <span class="fin-note">${esc(t.note || '')}</span>
       <span class="fin-amount" style="color:${color};">${sign}${money(t.amount)}</span>
       <button class="ghost" data-edit-tx="${t.id}" title="Editar">✎</button>
       <button class="danger" data-delete-tx="${t.id}">×</button>
@@ -836,10 +887,10 @@ function renderFinHistory() {
 
 function renderFinCategories() {
   document.getElementById('fin-cat-expense').innerHTML = finCatExpense.length
-    ? finCatExpense.map(c => `<span class="cat-chip">${c}<button data-delete-cat="expense|${c}">×</button></span>`).join('')
+    ? finCatExpense.map(c => `<span class="cat-chip">${esc(c)}<button data-delete-cat-type="expense" data-delete-cat-name="${esc(c)}">×</button></span>`).join('')
     : '<div class="empty">Sin categorías.</div>';
   document.getElementById('fin-cat-income').innerHTML = finCatIncome.length
-    ? finCatIncome.map(c => `<span class="cat-chip">${c}<button data-delete-cat="income|${c}">×</button></span>`).join('')
+    ? finCatIncome.map(c => `<span class="cat-chip">${esc(c)}<button data-delete-cat-type="income" data-delete-cat-name="${esc(c)}">×</button></span>`).join('')
     : '<div class="empty">Sin categorías.</div>';
 }
 
@@ -961,6 +1012,8 @@ function addSavingsPlan() {
 }
 
 function deleteSavingsPlan(id) {
+  const p = finSavingsPlans.find(x => x.id === id);
+  if (!confirm(`¿Eliminar el plan "${p ? p.name : ''}" y todo su historial de aportes?`)) return;
   finSavingsPlans = finSavingsPlans.filter(p => p.id !== id);
   delete finSavingsLog[id];
   delete savingsSelectedPeriod[id];
@@ -1004,7 +1057,7 @@ function renderFinSavingsPlans() {
     }).join('');
     return `<div class="savings-plan-card">
       <div class="row">
-        <strong style="font-size:13px;">${plan.name}</strong>
+        <strong style="font-size:13px;">${esc(plan.name)}</strong>
         <button class="danger" data-delete-saving-plan="${plan.id}">Eliminar</button>
       </div>
       <div class="sub" style="margin-bottom:10px;">${freqLabels[plan.frequency]} · meta ${money(plan.targetAmount)} por periodo</div>
@@ -1046,7 +1099,7 @@ function renderFinTips() {
   if (catEntries.length && monthExpense > 0) {
     const [topCat, topAmt] = catEntries[0];
     const pct = Math.round((topAmt / monthExpense) * 100);
-    if (pct >= 40) dynamicTips.push(`📊 "${topCat}" es tu categoría más grande este mes (${pct}% de tus gastos).`);
+    if (pct >= 40) dynamicTips.push(`📊 "${esc(topCat)}" es tu categoría más grande este mes (${pct}% de tus gastos).`);
   }
 
   const html = dynamicTips.map(t => `<div class="tip-row dynamic">${t}</div>`).join('')
@@ -1066,12 +1119,24 @@ function renderFinanzas() {
 }
 
 function wireStaticEvents() {
-  document.querySelectorAll('.tab').forEach(t => {
+  const navDrawer = document.getElementById('nav-drawer');
+  const navOverlay = document.getElementById('nav-overlay');
+  const viewTitle = document.getElementById('view-title');
+  const openMenu = () => { navDrawer.classList.add('open'); navOverlay.classList.add('open'); };
+  const closeMenu = () => { navDrawer.classList.remove('open'); navOverlay.classList.remove('open'); };
+  document.getElementById('menu-btn').addEventListener('click', openMenu);
+  document.getElementById('close-menu-btn').addEventListener('click', closeMenu);
+  navOverlay.addEventListener('click', closeMenu);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+
+  document.querySelectorAll('.nav-item').forEach(t => {
     t.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
       document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
       document.getElementById('view-' + t.dataset.view).classList.add('active');
+      viewTitle.textContent = t.textContent;
+      closeMenu();
       if (t.dataset.view === 'analytics') renderTrendChart();
       if (t.dataset.view === 'finanzas') renderFinChart();
     });
@@ -1102,7 +1167,7 @@ function wireStaticEvents() {
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
 
   document.body.addEventListener('click', e => {
-    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity]');
+    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity]');
     if (!t) return;
     if (t.dataset.toggleHabit) { toggle(selectedDate, t.dataset.toggleHabit); }
     else if (t.dataset.selectDay) { selectDay(t.dataset.selectDay); }
@@ -1111,7 +1176,7 @@ function wireStaticEvents() {
     else if (t.dataset.selectEngDay) { selectEngDay(t.dataset.selectEngDay); }
     else if (t.dataset.deleteHabit) { deleteHabit(t.dataset.deleteHabit); }
     else if (t.dataset.deleteTx) { deleteTransaction(t.dataset.deleteTx); }
-    else if (t.dataset.deleteCat) { const [type, name] = t.dataset.deleteCat.split('|'); deleteCategory(type, name); }
+    else if (t.dataset.deleteCatType) { deleteCategory(t.dataset.deleteCatType, t.dataset.deleteCatName); }
     else if (t.dataset.addFunds) {
       const row = t.closest('.goal-row');
       const input = row ? row.querySelector('[data-goal-input]') : null;
@@ -1183,6 +1248,21 @@ async function handleSignOut() {
   document.getElementById('logout-btn').style.display = 'none';
   document.getElementById('auth-email').value = '';
   document.getElementById('auth-password').value = '';
+  clearSyncError();
+
+  // Clear the previous user's data from memory so it can't be seen by
+  // whoever signs in next on this device.
+  currentUserId = null;
+  S = localStorageShim;
+  habits = []; logs = {};
+  engActivities = []; engLogs = {};
+  engBase = DEFAULT_ENG_BASE; engWeekGoal = DEFAULT_ENG_GOAL;
+  notes = {};
+  finTx = []; finCatExpense = []; finCatIncome = [];
+  finGoals = []; finSavingsPlans = []; finSavingsLog = {}; savingsSelectedPeriod = {};
+  finEditingId = null;
+  if (trendChart) { trendChart.destroy(); trendChart = null; }
+  if (finChart) { finChart.destroy(); finChart = null; }
 }
 
 function onAuthed(user) {

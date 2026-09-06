@@ -19,7 +19,9 @@ h1{ font-family:Georgia, serif; font-weight:700; font-size:26px; margin:0 0 4px;
 .sub{ color:var(--muted); font-size:13px; margin-bottom:20px; }
 .block-label{ display:block; margin-bottom:10px; }
 
-.topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px; }
+.topbar-title{ flex:1; min-width:0; text-align:center; }
+.topbar-title h1{ margin-bottom:2px; }
 .icon-btn{
   background:var(--ink2); border:1px solid var(--line); color:var(--muted);
   width:38px; height:38px; border-radius:8px; cursor:pointer; flex-shrink:0;
@@ -28,12 +30,32 @@ h1{ font-family:Georgia, serif; font-weight:700; font-size:26px; margin:0 0 4px;
 .icon-btn:hover{ background:var(--card); color:var(--text); }
 .icon-btn svg{ width:17px; height:17px; }
 
-.tabs{ display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
-.tab{
-  background:var(--ink2); border:1px solid var(--line); color:var(--muted);
-  padding:8px 14px; border-radius:8px; font-size:13px; cursor:pointer;
+.view-title{ font-size:20px; font-weight:700; font-family:Georgia, serif; margin:4px 0 16px; color:var(--text); }
+body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
+
+.nav-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:999;
+  opacity:0; pointer-events:none; transition:opacity .2s ease;
 }
-.tab.active{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+.nav-overlay.open{ opacity:1; pointer-events:auto; }
+
+.nav-drawer{
+  position:fixed; top:0; left:0; height:100%; width:260px; max-width:80vw;
+  background:var(--card); border-right:1px solid var(--line);
+  transform:translateX(-100%); transition:transform .25s ease;
+  z-index:1000; padding:16px; overflow-y:auto; display:flex; flex-direction:column;
+  padding-top:max(16px, env(safe-area-inset-top));
+  padding-bottom:max(16px, env(safe-area-inset-bottom));
+  padding-left:max(16px, env(safe-area-inset-left));
+}
+.nav-drawer.open{ transform:translateX(0); }
+.nav-drawer-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.nav-item{
+  padding:12px 12px; border-radius:8px; color:var(--muted); font-size:14px;
+  cursor:pointer; margin-bottom:4px; transition:background .15s, color .15s;
+}
+.nav-item:hover{ background:var(--ink2); color:var(--text); }
+.nav-item.active{ background:var(--accent); color:var(--accent-ink); font-weight:600; }
 
 .view{ display:none; }
 .view.active{ display:block; }
@@ -125,8 +147,15 @@ textarea{ width:100%; resize:vertical; min-height:70px; }
 }
 .pill.on{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 
+.sync-banner{
+  background:rgba(201,118,104,0.12); border:1px solid var(--red); color:var(--red);
+  padding:10px 12px; border-radius:8px; font-size:13px; margin-bottom:16px;
+}
+
 #auth-card{ background:var(--card); border:1px solid var(--line); border-radius:6px; }
 #auth-card input{ background:var(--ink2); border:1px solid var(--line); color:var(--text); border-radius:6px; }
+body.authed #auth-card{ display:none; }
+body:not(.authed) #app-views{ display:none; }
 
 button.ghost{
   background:transparent; border:1px solid var(--line); color:var(--muted);
@@ -178,4 +207,6 @@ button.ghost:hover{ color:var(--text); border-color:var(--muted); }
 
 .eng-min-input{ width:56px; text-align:center; padding:6px 4px; }
 
-.eng-activities-editor{ margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
+.eng-activities-editor{
+  margin-top:16px; padding:14px; background:var(--ink2); border:1px solid var(--line); border-radius:10px;
+}
