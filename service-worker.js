@@ -1,8 +1,13 @@
-const CACHE_NAME = 'daily-tracker-v1';
+const CACHE_NAME = 'daily-tracker-v2';
 const APP_SHELL = [
   './index.html',
   './style.css',
-  './script.js',
+  './utils.js',
+  './storage.js',
+  './habits.js',
+  './english.js',
+  './finance.js',
+  './app.js',
   './supabase-config.js',
   './manifest.json',
   './icon-192.png',
