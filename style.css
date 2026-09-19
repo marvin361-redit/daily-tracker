@@ -210,3 +210,43 @@ button.ghost:hover{ color:var(--text); border-color:var(--muted); }
 .eng-activities-editor{
   margin-top:16px; padding:14px; background:var(--ink2); border:1px solid var(--line); border-radius:10px;
 }
+
+.fab{
+  position:fixed; right:20px; bottom:max(20px, env(safe-area-inset-bottom));
+  width:56px; height:56px; border-radius:50%; z-index:800;
+  background:var(--accent); color:var(--accent-ink); border:none;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,0.4); transition:transform .15s ease;
+}
+.fab:hover{ transform:scale(1.06); }
+.fab svg{ width:24px; height:24px; }
+body:not(.authed) .fab{ display:none; }
+
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:1100;
+  opacity:0; pointer-events:none; transition:opacity .2s ease;
+}
+.modal-overlay.open{ opacity:1; pointer-events:auto; }
+
+.modal{
+  position:fixed; left:50%; bottom:0; transform:translate(-50%, 100%);
+  width:100%; max-width:360px; background:var(--card); border:1px solid var(--line); border-bottom:none;
+  border-radius:16px 16px 0 0; padding:16px; z-index:1101;
+  transition:transform .25s ease;
+  padding-bottom:max(16px, env(safe-area-inset-bottom));
+}
+.modal.open{ transform:translate(-50%, 0); }
+body:not(.authed) .modal, body:not(.authed) .modal-overlay{ display:none; }
+
+.modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.modal-body{ display:flex; flex-direction:column; gap:10px; }
+.modal-body input, .modal-body select{ padding:10px; font-size:14px; }
+.modal-body button.btn{ width:100%; padding:10px; }
+
+.toast{
+  position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(10px);
+  background:var(--green); color:var(--accent-ink); padding:10px 16px; border-radius:20px;
+  font-size:13px; font-weight:600; opacity:0; pointer-events:none; white-space:nowrap;
+  transition:opacity .2s ease, transform .2s ease; z-index:1200;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }

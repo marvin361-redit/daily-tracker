@@ -8,6 +8,7 @@ async function load() {
     return;
   }
   render();
+  maybeOpenQuickExpenseFromHash();
 }
 
 async function loadData() {
@@ -108,7 +109,7 @@ function wireStaticEvents() {
   document.getElementById('menu-btn').addEventListener('click', openMenu);
   document.getElementById('close-menu-btn').addEventListener('click', closeMenu);
   navOverlay.addEventListener('click', closeMenu);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeQuickExpenseModal(); } });
 
   document.querySelectorAll('.nav-item').forEach(t => {
     t.addEventListener('click', () => {
@@ -146,6 +147,12 @@ function wireStaticEvents() {
   document.getElementById('add-saving-plan-btn').addEventListener('click', addSavingsPlan);
   document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
+
+  document.getElementById('quick-expense-fab').addEventListener('click', openQuickExpenseModal);
+  document.getElementById('quick-expense-close-btn').addEventListener('click', closeQuickExpenseModal);
+  document.getElementById('quick-expense-overlay').addEventListener('click', closeQuickExpenseModal);
+  document.getElementById('quick-expense-save-btn').addEventListener('click', saveQuickExpense);
+  document.getElementById('quick-expense-amount').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickExpense(); });
 
   document.body.addEventListener('click', e => {
     const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity]');
