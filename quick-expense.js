@@ -4,12 +4,15 @@ let toastTimer = null;
 function populateQuickExpenseCategories() {
   const sel = document.getElementById('quick-expense-category');
   if (!sel) return;
-  sel.innerHTML = finCatExpense.length
-    ? finCatExpense.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')
-    : '<option value="Otros">Otros</option>';
+  const cats = finCatExpense.length ? finCatExpense : DEFAULT_EXPENSE_CATS;
+  sel.innerHTML = cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
 }
 
-function openQuickExpenseModal() {
+async function openQuickExpenseModal() {
+  // El FAB queda visible apenas se agrega la clase .authed, pero loadData()
+  // (que trae finCatExpense desde Supabase) sigue en curso en ese momento:
+  // hay que esperarlo o el modal se abre con finCatExpense todavía vacío.
+  if (dataLoadPromise) { try { await dataLoadPromise; } catch (e) {} }
   populateQuickExpenseCategories();
   const amountInp = document.getElementById('quick-expense-amount');
   amountInp.value = '';

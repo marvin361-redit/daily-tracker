@@ -1,6 +1,9 @@
+let dataLoadPromise = null;
+
 async function load() {
   try {
-    await loadData();
+    dataLoadPromise = loadData();
+    await dataLoadPromise;
     clearSyncError();
   } catch (e) {
     console.error('Error cargando datos:', e);
