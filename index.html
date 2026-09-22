@@ -57,6 +57,7 @@
   <div class="nav-item" data-view="editar">Editar hábitos</div>
   <div class="nav-item" data-view="ingles">Inglés</div>
   <div class="nav-item" data-view="finanzas">Finanzas</div>
+  <div class="nav-item" data-view="bloc-marvin">Bloc de Marvin</div>
 </nav>
 
 <h2 class="view-title" id="view-title">Hoy</h2>
@@ -281,6 +282,25 @@
     </div>
   </div>
 </div>
+
+<div class="view" id="view-bloc-marvin">
+  <div class="card">
+    <strong class="block-label">Tus materias</strong>
+    <div id="bloc-subject-list"></div>
+    <div class="add-row">
+      <input id="new-subject" placeholder="Nombre de la materia">
+      <button class="btn" id="add-subject-btn">Agregar</button>
+    </div>
+  </div>
+  <div class="card" id="bloc-notes-card">
+    <div class="row" id="bloc-notes-header" style="display:none;">
+      <strong class="block-label" id="bloc-notes-title" style="margin-bottom:0;">Notas</strong>
+      <span class="save-indicator" id="bloc-save-indicator">Guardado</span>
+    </div>
+    <div class="empty" id="bloc-notes-empty">Agregá una materia para empezar a tomar notas.</div>
+    <textarea id="bloc-notes-textarea" placeholder="Escribí tus apuntes, tareas, lo que quieras..." style="display:none;"></textarea>
+  </div>
+</div>
 </div>
 
 <button class="fab" id="quick-expense-fab" title="Gasto rápido" aria-label="Agregar gasto rápido">
@@ -319,6 +339,7 @@
 <script src="english.js"></script>
 <script src="finance.js"></script>
 <script src="quick-expense.js"></script>
+<script src="bloc-marvin.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -83,6 +83,12 @@ async function loadData() {
   const rawSavingsLog = await safeGet('fin-savings-log');
   try { finSavingsLog = rawSavingsLog ? JSON.parse(rawSavingsLog) : {}; } catch (e) { finSavingsLog = {}; }
 
+  const rawBlocSubjects = await safeGet('blocmarvin-subjects');
+  try { blocSubjects = rawBlocSubjects ? JSON.parse(rawBlocSubjects) : []; } catch (e) { blocSubjects = []; }
+
+  const rawBlocNotes = await safeGet('blocmarvin-notes');
+  try { blocNotes = rawBlocNotes ? JSON.parse(rawBlocNotes) : {}; } catch (e) { blocNotes = {}; }
+
   const dateInput = document.getElementById('fin-date');
   if (dateInput && !dateInput.value) dateInput.value = fmt(new Date());
   const hoyJump = document.getElementById('hoy-date-jump');
@@ -101,6 +107,7 @@ function render() {
   renderEditor();
   renderIngles();
   renderFinanzas();
+  renderBlocMarvin();
 }
 
 function wireStaticEvents() {
@@ -148,6 +155,9 @@ function wireStaticEvents() {
   document.getElementById('new-cat-income').addEventListener('keydown', e => { if (e.key === 'Enter') addCategory('income'); });
   document.getElementById('add-goal-btn').addEventListener('click', addGoal);
   document.getElementById('add-saving-plan-btn').addEventListener('click', addSavingsPlan);
+  document.getElementById('add-subject-btn').addEventListener('click', addSubject);
+  document.getElementById('new-subject').addEventListener('keydown', e => { if (e.key === 'Enter') addSubject(); });
+  document.getElementById('bloc-notes-textarea').addEventListener('input', e => onBlocNoteInput(e.target.value));
   document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
 
@@ -158,7 +168,7 @@ function wireStaticEvents() {
   document.getElementById('quick-expense-amount').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickExpense(); });
 
   document.body.addEventListener('click', e => {
-    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity]');
+    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity], [data-select-subject], [data-delete-subject]');
     if (!t) return;
     if (t.dataset.toggleHabit) { toggle(selectedDate, t.dataset.toggleHabit); }
     else if (t.dataset.selectDay) { selectDay(t.dataset.selectDay); }
@@ -185,6 +195,8 @@ function wireStaticEvents() {
     }
     else if (t.dataset.deleteSavingPlan) { deleteSavingsPlan(t.dataset.deleteSavingPlan); }
     else if (t.dataset.deleteEngActivity) { deleteEngActivity(t.dataset.deleteEngActivity); }
+    else if (t.dataset.selectSubject) { selectSubject(t.dataset.selectSubject); }
+    else if (t.dataset.deleteSubject) { deleteSubject(t.dataset.deleteSubject); }
   });
 
   document.body.addEventListener('change', e => {
@@ -194,6 +206,7 @@ function wireStaticEvents() {
     else if (t.dataset.engMinutes) setEngMinutes(engSelectedDate, t.dataset.engMinutes, t.value);
     else if (t.dataset.renameEngActivity) renameEngActivity(t.dataset.renameEngActivity, t.value);
     else if (t.dataset.engActivityMinutes) setEngActivityDefaultMinutes(t.dataset.engActivityMinutes, t.value);
+    else if (t.dataset.renameSubject) renameSubject(t.dataset.renameSubject, t.value);
   });
 }
 
@@ -252,6 +265,8 @@ async function handleSignOut() {
   finTx = []; finCatExpense = []; finCatIncome = [];
   finGoals = []; finSavingsPlans = []; finSavingsLog = {}; savingsSelectedPeriod = {};
   finEditingId = null;
+  blocSubjects = []; blocNotes = {}; blocSelectedId = null;
+  clearTimeout(blocSaveTimer); clearTimeout(blocIndicatorTimer);
   if (trendChart) { trendChart.destroy(); trendChart = null; }
   if (finChart) { finChart.destroy(); finChart = null; }
 }
