@@ -79,12 +79,88 @@ function clearSyncError() {
   if (el) el.style.display = 'none';
 }
 
-async function guardedSave(key, serialize) {
+// Cola de guardados fallidos, persistida directamente en localStorage (no vía
+// S) para que sobreviva aunque S sea supabaseStorage y esté inalcanzable.
+// Shape: { [key]: { value, ts } } — un objeto en vez de un array hace que
+// reintentos repetidos del mismo key (ej. editar el mismo hábito varias
+// veces offline) se queden solos con el último valor, sin acumular versiones
+// intermedias.
+const SYNC_QUEUE_KEY = '__sync_queue__';
+let flushInProgress = false;
+
+function readSyncQueue() {
   try {
-    await S.set(key, serialize(), false);
-    clearSyncError();
+    return JSON.parse(localStorage.getItem(SYNC_QUEUE_KEY) || '{}');
   } catch (e) {
-    console.error('Error guardando "' + key + '":', e);
-    showSyncError('No se pudo guardar. Revisá tu conexión — tus últimos cambios podrían no haberse sincronizado.');
+    return {};
   }
 }
+
+function writeSyncQueue(q) {
+  localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(q));
+}
+
+function enqueueFailedSave(key, value) {
+  const q = readSyncQueue();
+  q[key] = { value, ts: Date.now() };
+  writeSyncQueue(q);
+}
+
+function dequeueSave(key) {
+  const q = readSyncQueue();
+  if (key in q) {
+    delete q[key];
+    writeSyncQueue(q);
+  }
+}
+
+function updateSyncBanner() {
+  const n = Object.keys(readSyncQueue()).length;
+  if (n === 0) {
+    clearSyncError();
+  } else {
+    const plural = n === 1 ? '' : 's';
+    const verb = n === 1 ? 'subirá' : 'subirán';
+    showSyncError(`Tenés ${n} cambio${plural} sin sincronizar. Se ${verb} solo${plural} cuando vuelva la conexión.`);
+  }
+}
+
+async function guardedSave(key, serialize) {
+  const value = serialize();
+  try {
+    await S.set(key, value, false);
+    dequeueSave(key);
+  } catch (e) {
+    console.error('Error guardando "' + key + '":', e);
+    enqueueFailedSave(key, value);
+  }
+  updateSyncBanner();
+  if (navigator.onLine) flushSyncQueue();
+}
+
+async function flushSyncQueue() {
+  if (flushInProgress || !navigator.onLine) return;
+  flushInProgress = true;
+  try {
+    const q = readSyncQueue();
+    for (const key of Object.keys(q)) {
+      try {
+        await S.set(key, q[key].value, false);
+        dequeueSave(key);
+        updateSyncBanner();
+      } catch (e) {
+        // Probablemente seguimos sin conexión real: no tiene sentido
+        // machacar el resto de la cola ahora, esperamos el próximo trigger
+        // ('online', o el próximo guardado).
+        break;
+      }
+    }
+  } finally {
+    flushInProgress = false;
+  }
+}
+
+window.addEventListener('online', () => { flushSyncQueue(); });
+
+updateSyncBanner();
+if (navigator.onLine) flushSyncQueue();
