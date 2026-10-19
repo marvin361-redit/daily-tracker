@@ -176,6 +176,12 @@ function wireStaticEvents() {
   document.getElementById('sched-cancel-btn').addEventListener('click', cancelEditSchedBlock);
   document.getElementById('sched-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveSchedBlock(); });
   ['sched-day', 'sched-start', 'sched-end'].forEach(id => document.getElementById(id).addEventListener('change', validateSchedForm));
+  document.getElementById('backup-export-btn').addEventListener('click', exportBackup);
+  document.getElementById('backup-file-input').addEventListener('change', e => onBackupFileChosen(e.target));
+  document.getElementById('backup-summary').addEventListener('click', e => {
+    if (e.target.closest('#backup-confirm-btn')) confirmBackupImport();
+    else if (e.target.closest('#backup-cancel-btn')) cancelBackupImport();
+  });
   document.getElementById('bloc-notes-textarea').addEventListener('input', e => onBlocNoteInput(e.target.value));
   document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
@@ -306,6 +312,8 @@ async function handleSignOut() {
   clearTimeout(blocSaveTimer); clearTimeout(blocIndicatorTimer);
   schedBlocks = []; schedDone = {}; schedDupId = null; schedTab = 'hoy';
   resetSchedForm(); stopSchedClock();
+  cancelBackupImport();
+  ['backup-export-status', 'backup-import-status'].forEach(id => setBackupStatus(id, '', ''));
   if (trendChart) { trendChart.destroy(); trendChart = null; }
   if (finChart) { finChart.destroy(); finChart = null; }
 }

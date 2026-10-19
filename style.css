@@ -112,12 +112,12 @@ td.hname{ text-align:left; white-space:nowrap; padding-right:10px; }
 }
 .habit-item input[type="number"]{ flex:none; width:56px; }
 
-button.btn{
+button.btn, label.btn{
   background:var(--accent); color:var(--accent-ink); border:none; padding:11px 18px;
   border-radius:var(--radius-md); font-weight:600; font-size:13px; cursor:pointer;
   transition:transform .1s var(--ease), opacity .15s var(--ease);
 }
-button.btn:active{ transform:scale(.96); }
+button.btn:active, label.btn:active{ transform:scale(.96); }
 button.danger{
   background:transparent; border:1px solid var(--red); color:var(--red);
   padding:7px 12px; border-radius:var(--radius-sm); cursor:pointer; font-size:12px;
@@ -360,3 +360,19 @@ button.btn:disabled{ opacity:.4; cursor:default; transform:none; }
 .sched-block-time{ font-size:10px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
 .sched-now{ position:absolute; left:0; right:0; height:2px; background:var(--red); z-index:1; pointer-events:none; }
 .sched-now::before{ content:''; position:absolute; left:-3px; top:-3px; width:8px; height:8px; border-radius:50%; background:var(--red); }
+
+/* ---------- Respaldo ---------- */
+.sched-form-msg.ok{ color:var(--green); }
+.visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.backup-file-btn{ display:inline-block; }
+.backup-file-btn + .sched-form-msg, #backup-export-btn + .sched-form-msg{ margin-top:12px; }
+.visually-hidden:focus-visible + .backup-file-btn{ outline:2px solid var(--accent); outline-offset:2px; }
+.backup-summary{ margin-top:16px; padding:16px; background:var(--ink2); border:1px solid var(--line); border-radius:var(--radius-md); }
+.backup-summary-head{ margin-bottom:10px; }
+.backup-table td{ font-variant-numeric:tabular-nums; }
+.backup-table tr.changed td{ color:var(--text); font-weight:600; }
+.backup-table tr:not(.changed) td{ color:var(--muted); }
+.backup-note{ margin:12px 0; line-height:1.45; }
+.backup-check{ display:flex; align-items:center; gap:10px; font-size:13px; min-height:44px; cursor:pointer; }
+.backup-check input{ width:20px; height:20px; accent-color:var(--accent); }
+.backup-confirm-btn{ flex:1; padding:11px 12px; font-weight:600; font-size:13px; }
