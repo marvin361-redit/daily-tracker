@@ -58,6 +58,7 @@
   <div class="nav-item" data-view="ingles">Inglés</div>
   <div class="nav-item" data-view="finanzas">Finanzas</div>
   <div class="nav-item" data-view="bloc-marvin">Bloc de Marvin</div>
+  <div class="nav-item" data-view="horario">Horario</div>
 </nav>
 
 <h2 class="view-title" id="view-title">Hoy</h2>
@@ -312,6 +313,48 @@
     <textarea id="bloc-notes-textarea" placeholder="Escribí tus apuntes, tareas, lo que quieras..." style="display:none;"></textarea>
   </div>
 </div>
+<div class="view" id="view-horario">
+  <div class="day-select sched-tabs" role="tablist" aria-label="Vistas del horario">
+    <button class="day-btn active" data-sched-tab="hoy" role="tab">Hoy</button>
+    <button class="day-btn" data-sched-tab="semana" role="tab">Semana</button>
+    <button class="day-btn" data-sched-tab="editar" role="tab">Editar</button>
+  </div>
+
+  <div class="card" id="sched-pane-hoy">
+    <div class="row">
+      <strong id="sched-hoy-title">Hoy</strong>
+      <span class="sched-meta" id="sched-hoy-count"></span>
+    </div>
+    <div id="sched-hoy-list"></div>
+  </div>
+
+  <div class="card sched-week-card" id="sched-pane-semana" style="display:none;">
+    <div id="sched-week"></div>
+  </div>
+
+  <div id="sched-pane-editar" style="display:none;">
+    <div class="card" id="sched-form-card">
+      <strong class="block-label" id="sched-form-title">Nuevo bloque</strong>
+      <div class="sched-form">
+        <label class="sched-field sched-field-wide"><span>Nombre</span>
+          <input id="sched-name" placeholder="Ej. Álgebra, Gimnasio, Estudio" autocomplete="off"></label>
+        <label class="sched-field"><span>Día</span><select id="sched-day"></select></label>
+        <label class="sched-field"><span>Color</span><select id="sched-color"></select></label>
+        <label class="sched-field"><span>Inicio</span><input type="time" id="sched-start" value="08:00"></label>
+        <label class="sched-field"><span>Fin</span><input type="time" id="sched-end" value="09:00"></label>
+      </div>
+      <div class="sched-form-msg" id="sched-form-msg" role="status" aria-live="polite"></div>
+      <div class="sched-form-actions">
+        <button class="btn" id="sched-save-btn">Agregar bloque</button>
+        <button class="ghost" id="sched-cancel-btn" style="display:none;">Cancelar</button>
+      </div>
+    </div>
+    <div class="card">
+      <strong class="block-label">Tu semana</strong>
+      <div id="sched-editor-list"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <button class="fab" id="quick-expense-fab" title="Gasto rápido" aria-label="Agregar gasto rápido">
@@ -351,6 +394,7 @@
 <script src="finance.js"></script>
 <script src="quick-expense.js"></script>
 <script src="bloc-marvin.js"></script>
+<script src="schedule.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-tracker-v5';
+const CACHE_NAME = 'daily-tracker-v6';
 const APP_SHELL = [
   './index.html',
   './style.css',
@@ -9,6 +9,7 @@ const APP_SHELL = [
   './finance.js',
   './quick-expense.js',
   './bloc-marvin.js',
+  './schedule.js',
   './app.js',
   './supabase-config.js',
   './manifest.json',
