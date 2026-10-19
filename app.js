@@ -1,6 +1,11 @@
 let dataLoadPromise = null;
 
 async function load() {
+  // Mientras carga, las vistas quedan bloqueadas: editar sobre listas todavía
+  // vacías podría guardar encima de los datos reales.
+  const blocked = [document.getElementById('app-views'), document.getElementById('quick-expense-fab')];
+  document.body.classList.add('loading-data');
+  blocked.forEach(el => { el.inert = true; });
   try {
     dataLoadPromise = loadData();
     await dataLoadPromise;
@@ -9,6 +14,9 @@ async function load() {
     console.error('Error cargando datos:', e);
     showSyncError('No se pudieron cargar tus datos (revisá tu conexión). Los cambios que hagas ahora podrían no reflejar tu historial real hasta reconectar.');
     return;
+  } finally {
+    document.body.classList.remove('loading-data');
+    blocked.forEach(el => { el.inert = false; });
   }
   render();
   maybeOpenQuickExpenseFromHash();

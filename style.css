@@ -399,3 +399,18 @@ button.btn:disabled{ opacity:.4; cursor:default; transform:none; }
   .chk:not(.small){ position:relative; }
   .chk:not(.small)::after{ content:''; position:absolute; inset:-11px; }
 }
+
+/* ---------- Carga inicial ---------- */
+.loading-indicator{ display:none; }
+body.authed.loading-data .loading-indicator{
+  display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; margin-bottom:14px;
+}
+body.authed.loading-data .loading-indicator::before{
+  content:''; width:14px; height:14px; border-radius:50%; border:2px solid var(--line); border-top-color:var(--accent);
+  animation:spin .8s linear infinite;
+}
+body.loading-data #app-views, body.loading-data .fab{ opacity:.45; pointer-events:none; transition:opacity .2s var(--ease); }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+@media (prefers-reduced-motion: reduce){
+  body.authed.loading-data .loading-indicator::before{ animation:none; }
+}
