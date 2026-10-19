@@ -1,11 +1,13 @@
 let blocSubjects = [];
 let blocNotes = {};
+let blocTasks = {};
 let blocSelectedId = null;
 let blocSaveTimer = null;
 let blocIndicatorTimer = null;
 
 async function saveBlocSubjects() { await guardedSave('blocmarvin-subjects', () => JSON.stringify(blocSubjects)); }
 async function saveBlocNotes() { await guardedSave('blocmarvin-notes', () => JSON.stringify(blocNotes)); }
+async function saveBlocTasks() { await guardedSave('blocmarvin-tasks', () => JSON.stringify(blocTasks)); }
 
 function addSubject() {
   const inp = document.getElementById('new-subject');
@@ -27,18 +29,69 @@ function renameSubject(id, name) {
 
 function deleteSubject(id) {
   const s = blocSubjects.find(x => x.id === id);
-  if (!confirm(`¿Eliminar la materia "${s ? s.name : ''}"? Se borran también sus notas.`)) return;
+  if (!confirm(`¿Eliminar la materia "${s ? s.name : ''}"? Se borran también sus notas y tareas.`)) return;
   blocSubjects = blocSubjects.filter(x => x.id !== id);
   delete blocNotes[id];
+  delete blocTasks[id];
   if (blocSelectedId === id) blocSelectedId = null;
   saveBlocSubjects();
   saveBlocNotes();
+  saveBlocTasks();
   renderBlocMarvin();
 }
 
 function selectSubject(id) {
   blocSelectedId = id;
   renderBlocMarvin();
+}
+
+function addTask() {
+  const inp = document.getElementById('new-task');
+  const text = inp.value.trim();
+  if (!text || !blocSelectedId) return;
+  const task = { id: 'task' + Date.now() + Math.random().toString(36).slice(2, 6), text, done: false, createdAt: Date.now() };
+  (blocTasks[blocSelectedId] = blocTasks[blocSelectedId] || []).push(task);
+  inp.value = '';
+  saveBlocTasks();
+  renderBlocMarvin();
+}
+
+function toggleTask(id) {
+  const task = (blocTasks[blocSelectedId] || []).find(t => t.id === id);
+  if (!task) return;
+  task.done = !task.done;
+  saveBlocTasks();
+  renderBlocMarvin();
+}
+
+function deleteTask(id) {
+  if (!blocTasks[blocSelectedId]) return;
+  blocTasks[blocSelectedId] = blocTasks[blocSelectedId].filter(t => t.id !== id);
+  saveBlocTasks();
+  renderBlocMarvin();
+}
+
+function pendingTaskCount(subjectId) {
+  return (blocTasks[subjectId] || []).filter(t => !t.done).length;
+}
+
+function renderBlocTasks() {
+  const card = document.getElementById('bloc-tasks-card');
+  if (!blocSelectedId) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  const tasks = blocTasks[blocSelectedId] || [];
+  const doneCount = tasks.filter(t => t.done).length;
+  document.getElementById('bloc-tasks-count').textContent = tasks.length ? `${doneCount}/${tasks.length} hechas` : '';
+
+  // Pendientes arriba, terminadas al final; dentro de cada grupo, por orden de creación.
+  const sorted = [...tasks].sort((a, b) => (a.done - b.done) || (a.createdAt - b.createdAt));
+  document.getElementById('bloc-task-list').innerHTML = sorted.length ? sorted.map(t => `
+    <div class="habit-item bloc-task-item ${t.done ? 'done' : ''}">
+      <div class="chk ${t.done ? 'on' : ''}" data-toggle-task="${t.id}"></div>
+      <span class="bloc-task-text">${esc(t.text)}</span>
+      <button class="danger" data-delete-task="${t.id}">Eliminar</button>
+    </div>`).join('') : '<div class="empty">Esta materia no tiene tareas todavía.</div>';
 }
 
 function onBlocNoteInput(text) {
@@ -67,12 +120,18 @@ function renderBlocMarvin() {
   if (!blocSelectedId && blocSubjects.length) blocSelectedId = blocSubjects[0].id;
 
   const list = document.getElementById('bloc-subject-list');
-  list.innerHTML = blocSubjects.length ? blocSubjects.map(s => `
+  list.innerHTML = blocSubjects.length ? blocSubjects.map(s => {
+    const pending = pendingTaskCount(s.id);
+    return `
     <div class="habit-item bloc-subject-row ${s.id === blocSelectedId ? 'active-row' : ''}">
       <input type="text" value="${esc(s.name)}" data-rename-subject="${s.id}">
+      ${pending ? `<span class="pill">${pending} pendiente${pending === 1 ? '' : 's'}</span>` : ''}
       <button class="ghost" data-select-subject="${s.id}">${s.id === blocSelectedId ? 'Abierta' : 'Abrir'}</button>
       <button class="danger" data-delete-subject="${s.id}">Eliminar</button>
-    </div>`).join('') : '<div class="empty">No tenés materias todavía. Agregá la primera abajo.</div>';
+    </div>`;
+  }).join('') : '<div class="empty">No tenés materias todavía. Agregá la primera abajo.</div>';
+
+  renderBlocTasks();
 
   const header = document.getElementById('bloc-notes-header');
   const empty = document.getElementById('bloc-notes-empty');

@@ -197,6 +197,15 @@ button.ghost:active{ transform:scale(.96); }
 
 .bloc-subject-row.active-row{ background:var(--ink2); border-radius:var(--radius-sm); outline:1px solid var(--accent); }
 
+/* En pantallas angostas el nombre ocupa su línea y pill + botones bajan a la siguiente. */
+.bloc-subject-row{ flex-wrap:wrap; }
+.bloc-subject-row input[type="text"]{ flex:1 1 140px; min-width:0; }
+.bloc-subject-row .pill{ flex-shrink:0; white-space:nowrap; }
+.bloc-tasks-count{ font-size:12px; color:var(--muted); }
+.bloc-task-item .chk{ flex-shrink:0; }
+.bloc-task-text{ flex:1; font-size:14px; word-break:break-word; transition:opacity .15s var(--ease); }
+.bloc-task-item.done .bloc-task-text{ opacity:.5; text-decoration:line-through; }
+
 .save-indicator{
   font-size:12px; color:var(--green); opacity:0; transition:opacity .25s var(--ease);
 }

@@ -89,6 +89,9 @@ async function loadData() {
   const rawBlocNotes = await safeGet('blocmarvin-notes');
   try { blocNotes = rawBlocNotes ? JSON.parse(rawBlocNotes) : {}; } catch (e) { blocNotes = {}; }
 
+  const rawBlocTasks = await safeGet('blocmarvin-tasks');
+  try { blocTasks = rawBlocTasks ? JSON.parse(rawBlocTasks) : {}; } catch (e) { blocTasks = {}; }
+
   const dateInput = document.getElementById('fin-date');
   if (dateInput && !dateInput.value) dateInput.value = fmt(new Date());
   const hoyJump = document.getElementById('hoy-date-jump');
@@ -157,6 +160,8 @@ function wireStaticEvents() {
   document.getElementById('add-saving-plan-btn').addEventListener('click', addSavingsPlan);
   document.getElementById('add-subject-btn').addEventListener('click', addSubject);
   document.getElementById('new-subject').addEventListener('keydown', e => { if (e.key === 'Enter') addSubject(); });
+  document.getElementById('add-task-btn').addEventListener('click', addTask);
+  document.getElementById('new-task').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
   document.getElementById('bloc-notes-textarea').addEventListener('input', e => onBlocNoteInput(e.target.value));
   document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
@@ -168,7 +173,7 @@ function wireStaticEvents() {
   document.getElementById('quick-expense-amount').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickExpense(); });
 
   document.body.addEventListener('click', e => {
-    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity], [data-select-subject], [data-delete-subject]');
+    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity], [data-select-subject], [data-delete-subject], [data-toggle-task], [data-delete-task]');
     if (!t) return;
     if (t.dataset.toggleHabit) { toggle(selectedDate, t.dataset.toggleHabit); }
     else if (t.dataset.selectDay) { selectDay(t.dataset.selectDay); }
@@ -197,6 +202,8 @@ function wireStaticEvents() {
     else if (t.dataset.deleteEngActivity) { deleteEngActivity(t.dataset.deleteEngActivity); }
     else if (t.dataset.selectSubject) { selectSubject(t.dataset.selectSubject); }
     else if (t.dataset.deleteSubject) { deleteSubject(t.dataset.deleteSubject); }
+    else if (t.dataset.toggleTask) { toggleTask(t.dataset.toggleTask); }
+    else if (t.dataset.deleteTask) { deleteTask(t.dataset.deleteTask); }
   });
 
   document.body.addEventListener('change', e => {
@@ -265,7 +272,7 @@ async function handleSignOut() {
   finTx = []; finCatExpense = []; finCatIncome = [];
   finGoals = []; finSavingsPlans = []; finSavingsLog = {}; savingsSelectedPeriod = {};
   finEditingId = null;
-  blocSubjects = []; blocNotes = {}; blocSelectedId = null;
+  blocSubjects = []; blocNotes = {}; blocTasks = {}; blocSelectedId = null;
   clearTimeout(blocSaveTimer); clearTimeout(blocIndicatorTimer);
   if (trendChart) { trendChart.destroy(); trendChart = null; }
   if (finChart) { finChart.destroy(); finChart = null; }
