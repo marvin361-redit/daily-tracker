@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-tracker-v10';
+const CACHE_NAME = 'daily-tracker-v11';
 const APP_SHELL = [
   './index.html',
   './style.css',
@@ -16,6 +16,8 @@ const APP_SHELL = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './favicon.png',
+  './apple-touch-icon.png',
 ];
 
 self.addEventListener('install', event => {
