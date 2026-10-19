@@ -101,7 +101,7 @@ function renderHoy() {
     list.innerHTML = habits.map(h => {
       const on = (logs[selectedDate] || {})[h.id];
       return `<div class="habit-item">
-        <div class="chk ${on ? 'on' : ''}" data-toggle-habit="${h.id}"></div>
+        <div class="chk ${on ? 'on' : ''}" data-toggle-habit="${h.id}" role="checkbox" tabindex="0" aria-checked="${!!on}" aria-label="${esc(h.name)}"></div>
         <span>${esc(h.name)}</span>
       </div>`;
     }).join('');
@@ -115,7 +115,7 @@ function renderHoy() {
     const ds = fmt(x);
     const p = dayPct(ds);
     const active = ds === selectedDate;
-    return `<div class="day-btn ${active ? 'active' : ''}" data-select-day="${ds}">${DOW[x.getDay()]} ${x.getDate()}<div class="weekday">${p}%</div></div>`;
+    return `<div class="day-btn ${active ? 'active' : ''}" data-select-day="${ds}" role="button" tabindex="0" aria-pressed="${active}">${DOW[x.getDay()]} ${x.getDate()}<div class="weekday">${p}%</div></div>`;
   }).join('');
 
   document.getElementById('day-note').value = notes[selectedDate] || '';
@@ -158,7 +158,7 @@ function renderMes() {
         if (on) totalDone++;
         totalPossible++;
       }
-      return `<td><div class="chk small ${on ? 'on' : ''}" data-toggle-month="${ds}|${h.id}"></div></td>`;
+      return `<td><div class="chk small ${on ? 'on' : ''}" data-toggle-month="${ds}|${h.id}" role="checkbox" tabindex="0" aria-checked="${!!on}" aria-label="${esc(h.name)} ${ds}"></div></td>`;
     }).join('') + '</tr>';
   });
   document.getElementById('month-table').innerHTML = html || '<tr><td class="empty">Sin hábitos aún.</td></tr>';
@@ -262,8 +262,8 @@ function renderEditor() {
   const ed = document.getElementById('habit-editor');
   ed.innerHTML = habits.length ? habits.map(h => `
     <div class="habit-item">
-      <input type="text" value="${esc(h.name)}" data-rename-habit="${h.id}">
-      <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" data-goal-habit="${h.id}">
+      <input type="text" value="${esc(h.name)}" data-rename-habit="${h.id}" aria-label="Nombre del hábito">
+      <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" aria-label="Meta semanal de ${esc(h.name)} (días)" data-goal-habit="${h.id}">
       <button class="danger" data-delete-habit="${h.id}">Eliminar</button>
     </div>`).join('') : '<div class="empty">No tenés hábitos todavía. Agregá uno abajo.</div>';
 }

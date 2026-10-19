@@ -150,7 +150,7 @@ function renderFinGoals() {
       </div>
       <div class="barwrap"><div class="bar" style="width:${pct}%;background:${done ? 'var(--green)' : 'var(--accent)'};"></div></div>
       <div class="goal-actions">
-        <input type="number" min="0" step="1" placeholder="Bs a agregar" data-goal-input="${g.id}">
+        <input type="number" min="0" step="1" placeholder="Bs a agregar" aria-label="Bs a agregar a ${esc(g.name)}" data-goal-input="${g.id}">
         <button class="btn" data-add-funds="${g.id}">Agregar</button>
         <button class="danger" data-delete-goal="${g.id}">Eliminar</button>
       </div>
@@ -167,10 +167,10 @@ function renderFinHistory() {
       const cats = t.type === 'income' ? finCatIncome : finCatExpense;
       return `<div class="fin-row fin-edit-row" data-tx-edit-row="${t.id}">
         <span class="fin-cat">${t.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
-        <input type="number" min="0" step="0.01" value="${t.amount}" data-edit-amount style="width:80px;">
-        <select data-edit-category style="width:130px;">${cats.map(c => `<option value="${esc(c)}" ${c === t.category ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
-        <input type="date" value="${t.date}" data-edit-date style="width:140px;">
-        <input type="text" value="${esc(t.note || '')}" data-edit-note placeholder="Nota" style="flex:1;min-width:100px;">
+        <input type="number" min="0" step="0.01" value="${t.amount}" data-edit-amount aria-label="Monto" style="width:80px;">
+        <select data-edit-category aria-label="Categoría" style="width:130px;">${cats.map(c => `<option value="${esc(c)}" ${c === t.category ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+        <input type="date" value="${t.date}" data-edit-date aria-label="Fecha" style="width:140px;">
+        <input type="text" value="${esc(t.note || '')}" data-edit-note placeholder="Nota" aria-label="Nota" style="flex:1;min-width:100px;">
         <button class="btn" data-save-edit-tx="${t.id}">Guardar</button>
         <button class="ghost" data-cancel-edit-tx="${t.id}">Cancelar</button>
       </div>`;
@@ -366,7 +366,7 @@ function renderFinSavingsPlans() {
       <div class="sub" style="margin-bottom:10px;">${freqLabels[plan.frequency]} · meta ${money(plan.targetAmount)} por periodo</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">${chips}</div>
       <div class="inline-field">
-        <input type="number" min="0" step="1" placeholder="Bs ahorrado" value="${selectedAmount || ''}" data-saving-amount-input="${plan.id}">
+        <input type="number" min="0" step="1" placeholder="Bs ahorrado" aria-label="Bs ahorrado en ${esc(plan.name)}" value="${selectedAmount || ''}" data-saving-amount-input="${plan.id}">
         <button class="btn" data-save-saving="${plan.id}">Guardar</button>
       </div>
     </div>`;

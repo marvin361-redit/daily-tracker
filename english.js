@@ -100,8 +100,8 @@ function renderEngActivitiesEditor() {
   if (!el) return;
   el.innerHTML = engActivities.map(a => `
     <div class="habit-item">
-      <input type="text" value="${esc(a.name)}" data-rename-eng-activity="${a.id}">
-      <input type="number" min="0" max="1440" value="${a.defaultMinutes}" title="Minutos típicos" data-eng-activity-minutes="${a.id}">
+      <input type="text" value="${esc(a.name)}" data-rename-eng-activity="${a.id}" aria-label="Nombre de la actividad">
+      <input type="number" min="0" max="1440" value="${a.defaultMinutes}" title="Minutos típicos" aria-label="Minutos típicos de ${esc(a.name)}" data-eng-activity-minutes="${a.id}">
       <button class="danger" data-delete-eng-activity="${a.id}" ${engActivities.length <= 1 ? 'disabled title="Debe quedar al menos una actividad"' : ''}>Eliminar</button>
     </div>`).join('');
 }
@@ -158,9 +158,9 @@ function renderIngles() {
     const mins = (engLogs[engSelectedDate] || {})[a.id] || 0;
     const on = mins > 0;
     return `<div class="habit-item">
-      <div class="chk ${on ? 'on' : ''}" data-toggle-eng="${a.id}" title="Tap para usar el tiempo típico (${a.defaultMinutes} min)"></div>
+      <div class="chk ${on ? 'on' : ''}" data-toggle-eng="${a.id}" role="checkbox" tabindex="0" aria-checked="${on}" aria-label="${esc(a.name)}" title="Tap para usar el tiempo típico (${a.defaultMinutes} min)"></div>
       <span style="flex:1;">${esc(a.name)}</span>
-      <input type="number" class="eng-min-input" min="0" max="1440" step="1" placeholder="${a.defaultMinutes}" value="${mins || ''}" data-eng-minutes="${a.id}">
+      <input type="number" class="eng-min-input" min="0" max="1440" step="1" placeholder="${a.defaultMinutes}" value="${mins || ''}" aria-label="Minutos de ${esc(a.name)}" data-eng-minutes="${a.id}">
       <span class="sub" style="margin:0;">min</span>
     </div>`;
   }).join('');

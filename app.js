@@ -234,11 +234,18 @@ function wireStaticEvents() {
     else if (t.dataset.dupCancel) { openSchedDuplicate(schedDupId); }
   });
 
-  // Los .chk son <div>: con role="checkbox" + tabindex se activan con Espacio/Enter.
+  // Los .chk, días y entradas del menú son <div>: con role + tabindex se
+  // activan con Espacio/Enter como un control nativo.
   document.body.addEventListener('keydown', e => {
-    if ((e.key === ' ' || e.key === 'Enter') && e.target.matches('[role="checkbox"]')) {
+    if ((e.key === ' ' || e.key === 'Enter') && e.target.matches('[role="checkbox"], [role="button"]')) {
       e.preventDefault();
+      const attr = [...e.target.attributes].find(a => a.name.startsWith('data-'));
       e.target.click();
+      // Si el re-render reemplazó el nodo, devolver el foco al nuevo para no perderlo.
+      if (attr && !e.target.isConnected) {
+        const again = document.querySelector(`[${attr.name}="${CSS.escape(attr.value)}"]`);
+        if (again) again.focus();
+      }
     }
   });
 

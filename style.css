@@ -78,7 +78,7 @@ body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
 .row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .stat{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:16px; }
 .stat .num{ font-size:26px; font-weight:700; font-family:inherit; letter-spacing:-.3px; }
-.stat .lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; opacity:.8; }
+.stat .lbl{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
 
 .ring{
   width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center;
@@ -92,7 +92,7 @@ body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
 .scroll-x{ overflow-x:auto; }
 table{ width:100%; border-collapse:collapse; font-size:13px; }
 th, td{ padding:8px 6px; text-align:center; border-bottom:1px solid var(--line); }
-th{ color:var(--muted); font-weight:500; font-size:11px; opacity:.8; }
+th{ color:var(--muted); font-weight:500; font-size:11px; }
 td.hname{ text-align:left; white-space:nowrap; padding-right:10px; }
 
 .chk{
@@ -143,7 +143,7 @@ textarea{ width:100%; resize:vertical; min-height:70px; }
 .inline-field input[type="number"]{ width:70px; padding:8px 10px; }
 .inline-field input#eng-base-input{ flex:1; padding:9px 12px; }
 
-.weekday{ font-size:11px; color:var(--muted); margin-top:2px; opacity:.85; }
+.weekday{ font-size:11px; color:var(--muted); margin-top:2px; }
 .day-select{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 .day-btn{
   background:var(--ink2); border:1px solid var(--line); color:var(--muted);
@@ -331,7 +331,7 @@ body:not(.authed) .modal, body:not(.authed) .modal-overlay{ display:none; }
 button.btn:disabled{ opacity:.4; cursor:default; transform:none; }
 
 .sched-day-group + .sched-day-group{ margin-top:14px; }
-.sched-day-label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; opacity:.8; }
+.sched-day-label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
 .sched-edit-row{ flex-wrap:wrap; }
 .sched-edit-row.editing{ background:var(--ink2); border-radius:var(--radius-sm); outline:1px solid var(--accent); padding-left:10px; padding-right:10px; }
 .sched-edit-row .sched-main{ flex:1 1 150px; }
@@ -382,3 +382,20 @@ button.btn:disabled{ opacity:.4; cursor:default; transform:none; }
 .backup-check{ display:flex; align-items:center; gap:10px; font-size:13px; min-height:44px; cursor:pointer; }
 .backup-check input{ width:20px; height:20px; accent-color:var(--accent); }
 .backup-confirm-btn{ flex:1; padding:11px 12px; font-weight:600; font-size:13px; }
+
+/* ---------- Accesibilidad ---------- */
+/* Foco visible solo con teclado (no al tocar). */
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.chk:focus-visible{ outline-offset:3px; }
+.day-btn.active .weekday, .day-btn.active{ color:var(--accent-ink); }
+
+/* Zona táctil mínima de 44px en pantallas táctiles, sin cambiar el look en desktop. */
+@media (pointer: coarse){
+  button.danger, button.ghost, .day-btn, .icon-btn, .nav-item{ min-height:44px; }
+  .icon-btn{ min-width:44px; }
+  button.danger, button.ghost{ display:inline-flex; align-items:center; justify-content:center; }
+  .cat-chip button{ min-width:32px; min-height:32px; }
+  /* El .chk se ve de 22px pero recibe toques en 44px. */
+  .chk:not(.small){ position:relative; }
+  .chk:not(.small)::after{ content:''; position:absolute; inset:-11px; }
+}

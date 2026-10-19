@@ -88,7 +88,7 @@ function renderBlocTasks() {
   const sorted = [...tasks].sort((a, b) => (a.done - b.done) || (a.createdAt - b.createdAt));
   document.getElementById('bloc-task-list').innerHTML = sorted.length ? sorted.map(t => `
     <div class="habit-item bloc-task-item ${t.done ? 'done' : ''}">
-      <div class="chk ${t.done ? 'on' : ''}" data-toggle-task="${t.id}"></div>
+      <div class="chk ${t.done ? 'on' : ''}" data-toggle-task="${t.id}" role="checkbox" tabindex="0" aria-checked="${t.done}" aria-label="${esc(t.text)}"></div>
       <span class="bloc-task-text">${esc(t.text)}</span>
       <button class="danger" data-delete-task="${t.id}">Eliminar</button>
     </div>`).join('') : '<div class="empty">Esta materia no tiene tareas todavía.</div>';
@@ -124,7 +124,7 @@ function renderBlocMarvin() {
     const pending = pendingTaskCount(s.id);
     return `
     <div class="habit-item bloc-subject-row ${s.id === blocSelectedId ? 'active-row' : ''}">
-      <input type="text" value="${esc(s.name)}" data-rename-subject="${s.id}">
+      <input type="text" value="${esc(s.name)}" data-rename-subject="${s.id}" aria-label="Nombre de la materia">
       ${pending ? `<span class="pill">${pending} pendiente${pending === 1 ? '' : 's'}</span>` : ''}
       <button class="ghost" data-select-subject="${s.id}">${s.id === blocSelectedId ? 'Abierta' : 'Abrir'}</button>
       <button class="danger" data-delete-subject="${s.id}">Eliminar</button>

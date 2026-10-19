@@ -51,15 +51,15 @@
       </svg>
     </button>
   </div>
-  <div class="nav-item active" data-view="hoy">Hoy</div>
-  <div class="nav-item" data-view="mes">Mes</div>
-  <div class="nav-item" data-view="analytics">Analíticas</div>
-  <div class="nav-item" data-view="editar">Editar hábitos</div>
-  <div class="nav-item" data-view="ingles">Inglés</div>
-  <div class="nav-item" data-view="finanzas">Finanzas</div>
-  <div class="nav-item" data-view="bloc-marvin">Bloc de Marvin</div>
-  <div class="nav-item" data-view="horario">Horario</div>
-  <div class="nav-item" data-view="respaldo">Respaldo</div>
+  <div class="nav-item active" role="button" tabindex="0" data-view="hoy">Hoy</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="mes">Mes</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="analytics">Analíticas</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="editar">Editar hábitos</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="ingles">Inglés</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="finanzas">Finanzas</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="bloc-marvin">Bloc de Marvin</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="horario">Horario</div>
+  <div class="nav-item" role="button" tabindex="0" data-view="respaldo">Respaldo</div>
 </nav>
 
 <h2 class="view-title" id="view-title">Hoy</h2>
@@ -67,8 +67,8 @@
 <div class="card" id="auth-card" style="max-width:360px;margin-top:10px;">
   <strong class="block-label" id="auth-title">Iniciar sesión</strong>
   <div class="sub" style="margin-bottom:14px;">Tus datos se sincronizan entre todos tus dispositivos.</div>
-  <input type="email" id="auth-email" placeholder="Correo electrónico" style="width:100%;margin-bottom:8px;padding:8px 10px;">
-  <input type="password" id="auth-password" placeholder="Contraseña" style="width:100%;margin-bottom:8px;padding:8px 10px;">
+  <input type="email" id="auth-email" aria-label="Correo electrónico" placeholder="Correo electrónico" style="width:100%;margin-bottom:8px;padding:8px 10px;">
+  <input type="password" id="auth-password" aria-label="Contraseña" placeholder="Contraseña" style="width:100%;margin-bottom:8px;padding:8px 10px;">
   <div id="auth-error" class="sub" style="color:var(--red);margin-bottom:8px;display:none;"></div>
   <div style="display:flex;gap:8px;">
     <button class="btn" id="auth-signin-btn" style="flex:1;">Entrar</button>
@@ -82,7 +82,7 @@
   <div class="card">
     <div class="date-jump">
       <span class="sub" style="margin:0;">Ir a fecha:</span>
-      <input type="date" id="hoy-date-jump">
+      <input type="date" id="hoy-date-jump" aria-label="Ir a fecha">
     </div>
     <div class="row"><strong id="hoy-title">Hoy</strong>
       <div class="ring" id="hoy-ring">0%</div>
@@ -99,14 +99,14 @@
   </div>
   <div class="card">
     <strong class="block-label">Nota del día</strong>
-    <textarea id="day-note" placeholder="¿Cómo te fue hoy? Algo que quieras recordar..."></textarea>
+    <textarea id="day-note" aria-label="Nota del día" placeholder="¿Cómo te fue hoy? Algo que quieras recordar..."></textarea>
   </div>
 </div>
 
 <div class="view" id="view-mes">
   <div class="card">
     <div class="row">
-      <input type="month" id="month-picker">
+      <input type="month" id="month-picker" aria-label="Mes">
       <div class="ring ring-green" id="mes-ring">0%</div>
     </div>
     <div class="scroll-x">
@@ -144,7 +144,7 @@
     <strong class="block-label">Tus hábitos</strong>
     <div id="habit-editor"></div>
     <div class="add-row">
-      <input id="new-habit" placeholder="Nombre del nuevo hábito">
+      <input id="new-habit" aria-label="Nombre del nuevo hábito" placeholder="Nombre del nuevo hábito">
       <button class="btn" id="add-habit-btn">Agregar</button>
     </div>
   </div>
@@ -161,7 +161,7 @@
   <div class="card">
     <div class="date-jump">
       <span class="sub" style="margin:0;">Ir a fecha:</span>
-      <input type="date" id="eng-date-jump">
+      <input type="date" id="eng-date-jump" aria-label="Ir a fecha">
     </div>
     <div class="row"><strong id="eng-day-title">Actividades de hoy</strong></div>
     <div id="eng-list"></div>
@@ -170,8 +170,8 @@
       <strong class="block-label" style="font-size:13px;">✏️ Editar / agregar tus actividades de inglés</strong>
       <div id="eng-activities-editor"></div>
       <div class="add-row">
-        <input type="text" id="new-eng-activity-name" placeholder="Nueva actividad (ej: Podcast)">
-        <input type="number" id="new-eng-activity-minutes" placeholder="Min. típicos" min="0" max="1440" step="1" style="max-width:110px;">
+        <input type="text" id="new-eng-activity-name" aria-label="Nombre de la nueva actividad" placeholder="Nueva actividad (ej: Podcast)">
+        <input type="number" id="new-eng-activity-minutes" aria-label="Minutos típicos de la nueva actividad" placeholder="Min. típicos" min="0" max="1440" step="1" style="max-width:110px;">
         <button class="btn" id="add-eng-activity-btn">Agregar</button>
       </div>
     </div>
@@ -181,7 +181,7 @@
     <div class="barwrap" style="margin-bottom:8px;"><div class="bar" id="eng-week-bar"></div></div>
     <div class="inline-field">
       <span class="sub" style="margin:0;">Horas por semana:</span>
-      <input type="number" id="eng-goal-input" min="0" step="0.5">
+      <input type="number" id="eng-goal-input" aria-label="Meta semanal de inglés (horas)" min="0" step="0.5">
     </div>
   </div>
   <div class="card">
@@ -193,7 +193,7 @@
     <strong class="block-label">Ajustar base de horas</strong>
     <div class="sub" style="margin-bottom:8px;">Horas que ya tenías acumuladas antes de usar este tracker (no puede ser negativo).</div>
     <div class="inline-field">
-      <input type="number" id="eng-base-input" min="0" step="0.1">
+      <input type="number" id="eng-base-input" aria-label="Base de horas de inglés" min="0" step="0.1">
       <button class="btn" id="save-eng-base-btn">Guardar</button>
     </div>
   </div>
@@ -213,14 +213,14 @@
   <div class="card">
     <strong class="block-label">Nueva transacción</strong>
     <div class="fin-form">
-      <select id="fin-type">
+      <select id="fin-type" aria-label="Tipo de transacción">
         <option value="expense">Gasto</option>
         <option value="income">Ingreso</option>
       </select>
-      <input type="number" id="fin-amount" placeholder="Monto (Bs)" min="0" step="0.01">
-      <select id="fin-category"></select>
-      <input type="date" id="fin-date">
-      <input type="text" id="fin-note" placeholder="Nota (opcional)">
+      <input type="number" id="fin-amount" aria-label="Monto (Bs)" placeholder="Monto (Bs)" min="0" step="0.01">
+      <select id="fin-category" aria-label="Categoría"></select>
+      <input type="date" id="fin-date" aria-label="Fecha">
+      <input type="text" id="fin-note" aria-label="Nota (opcional)" placeholder="Nota (opcional)">
       <button class="btn" id="fin-add-btn">Agregar</button>
     </div>
   </div>
@@ -236,8 +236,8 @@
     <strong class="block-label">Metas de ahorro</strong>
     <div id="fin-goals"></div>
     <div class="add-row">
-      <input type="text" id="new-goal-name" placeholder="Nombre de la meta">
-      <input type="number" id="new-goal-target" placeholder="Objetivo (Bs)" min="0" step="1" style="max-width:140px;">
+      <input type="text" id="new-goal-name" aria-label="Nombre de la meta" placeholder="Nombre de la meta">
+      <input type="number" id="new-goal-target" aria-label="Objetivo (Bs)" placeholder="Objetivo (Bs)" min="0" step="1" style="max-width:140px;">
       <button class="btn" id="add-goal-btn">Crear meta</button>
     </div>
   </div>
@@ -247,13 +247,13 @@
     <div class="sub" style="margin-top:-6px;">Configurá una meta que se repite cada día, semana o mes, y marcá cuando la cumplas.</div>
     <div id="fin-savings-plans"></div>
     <div class="fin-form" style="margin-top:8px;">
-      <input type="text" id="new-saving-name" placeholder="Nombre (ej: Ahorro semanal)">
-      <select id="new-saving-freq">
+      <input type="text" id="new-saving-name" aria-label="Nombre del plan de ahorro" placeholder="Nombre (ej: Ahorro semanal)">
+      <select id="new-saving-freq" aria-label="Frecuencia">
         <option value="daily">Diario</option>
         <option value="weekly" selected>Semanal</option>
         <option value="monthly">Mensual</option>
       </select>
-      <input type="number" id="new-saving-target" placeholder="Meta por periodo (Bs)" min="0" step="1" style="max-width:170px;">
+      <input type="number" id="new-saving-target" aria-label="Meta por periodo (Bs)" placeholder="Meta por periodo (Bs)" min="0" step="1" style="max-width:170px;">
       <button class="btn" id="add-saving-plan-btn">Crear plan</button>
     </div>
   </div>
@@ -274,12 +274,12 @@
       <div class="cat-col">
         <div class="sub" style="margin-bottom:6px;">Gastos</div>
         <div id="fin-cat-expense" class="cat-chips"></div>
-        <div class="add-row"><input type="text" id="new-cat-expense" placeholder="Nueva categoría de gasto"><button class="btn" id="add-cat-expense-btn">+</button></div>
+        <div class="add-row"><input type="text" id="new-cat-expense" aria-label="Nueva categoría de gasto" placeholder="Nueva categoría de gasto"><button class="btn" id="add-cat-expense-btn">+</button></div>
       </div>
       <div class="cat-col">
         <div class="sub" style="margin-bottom:6px;">Ingresos</div>
         <div id="fin-cat-income" class="cat-chips"></div>
-        <div class="add-row"><input type="text" id="new-cat-income" placeholder="Nueva categoría de ingreso"><button class="btn" id="add-cat-income-btn">+</button></div>
+        <div class="add-row"><input type="text" id="new-cat-income" aria-label="Nueva categoría de ingreso" placeholder="Nueva categoría de ingreso"><button class="btn" id="add-cat-income-btn">+</button></div>
       </div>
     </div>
   </div>
@@ -290,7 +290,7 @@
     <strong class="block-label">Tus materias</strong>
     <div id="bloc-subject-list"></div>
     <div class="add-row">
-      <input id="new-subject" placeholder="Nombre de la materia">
+      <input id="new-subject" aria-label="Nombre de la materia" placeholder="Nombre de la materia">
       <button class="btn" id="add-subject-btn">Agregar</button>
     </div>
   </div>
@@ -301,7 +301,7 @@
     </div>
     <div id="bloc-task-list"></div>
     <div class="add-row">
-      <input id="new-task" placeholder="Nueva tarea">
+      <input id="new-task" aria-label="Nueva tarea" placeholder="Nueva tarea">
       <button class="btn" id="add-task-btn">Agregar</button>
     </div>
   </div>
@@ -311,7 +311,7 @@
       <span class="save-indicator" id="bloc-save-indicator">Guardado</span>
     </div>
     <div class="empty" id="bloc-notes-empty">Agregá una materia para empezar a tomar notas.</div>
-    <textarea id="bloc-notes-textarea" placeholder="Escribí tus apuntes, tareas, lo que quieras..." style="display:none;"></textarea>
+    <textarea id="bloc-notes-textarea" aria-label="Notas de la materia" placeholder="Escribí tus apuntes, tareas, lo que quieras..." style="display:none;"></textarea>
   </div>
 </div>
 <div class="view" id="view-horario">
@@ -393,8 +393,8 @@
     </button>
   </div>
   <div class="modal-body">
-    <input type="number" id="quick-expense-amount" placeholder="Monto (Bs)" min="0" step="0.01" inputmode="decimal" autocomplete="off">
-    <select id="quick-expense-category"></select>
+    <input type="number" id="quick-expense-amount" aria-label="Monto (Bs)" placeholder="Monto (Bs)" min="0" step="0.01" inputmode="decimal" autocomplete="off">
+    <select id="quick-expense-category" aria-label="Categoría"></select>
     <button class="btn" id="quick-expense-save-btn">Guardar</button>
   </div>
 </div>

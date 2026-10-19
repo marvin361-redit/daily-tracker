@@ -194,14 +194,8 @@ function toggleSchedDone(id) {
   const day = schedDone[today] = schedDone[today] || {};
   if (day[id]) delete day[id]; else day[id] = true;
   if (!Object.keys(day).length) delete schedDone[today];
-  const hadFocus = document.activeElement && document.activeElement.dataset.toggleSched === id;
   saveSchedDone();
   renderSchedule();
-  // El re-render reemplaza el nodo: devolver el foco para que el teclado no lo pierda.
-  if (hadFocus) {
-    const el = document.querySelector(`[data-toggle-sched="${id}"]`);
-    if (el) el.focus();
-  }
 }
 
 // ---------- Render ----------
