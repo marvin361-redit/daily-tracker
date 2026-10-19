@@ -23,6 +23,8 @@ body{
   padding-right:max(16px, env(safe-area-inset-right));
   padding-bottom:max(60px, env(safe-area-inset-bottom));
 }
+/* Con sesión iniciada hay FAB: dejar lugar para que no tape lo último de la página. */
+body.authed{ padding-bottom:calc(96px + env(safe-area-inset-bottom)); }
 h1{ font-family:inherit; font-weight:700; font-size:26px; margin:0 0 4px; letter-spacing:-.3px; color:var(--text); }
 .sub{ color:var(--muted); font-size:13px; margin-bottom:20px; }
 .block-label{ display:block; margin-bottom:10px; font-weight:600; }
@@ -131,8 +133,12 @@ input, select, textarea{
 }
 textarea{ width:100%; resize:vertical; min-height:70px; }
 
-.add-row{ display:flex; gap:8px; margin-top:14px; }
-.add-row input{ flex:1; padding:10px 12px; }
+.add-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+/* Bases flexibles: con 2 hijos entra en una línea; con 3 (nombre + número +
+   botón) en pantallas angostas el botón baja en vez de desbordar la card. */
+.add-row input{ flex:1 1 160px; min-width:0; padding:10px 12px; }
+.add-row input[type="number"]{ flex:1 1 90px; }
+.add-row .btn{ margin-left:auto; }
 .inline-field{ display:flex; align-items:center; gap:8px; }
 .inline-field input[type="number"]{ width:70px; padding:8px 10px; }
 .inline-field input#eng-base-input{ flex:1; padding:9px 12px; }
@@ -253,7 +259,7 @@ button.ghost:active{ transform:scale(.96); }
 }
 
 .fab{
-  position:fixed; right:20px; bottom:max(20px, env(safe-area-inset-bottom));
+  position:fixed; right:max(20px, env(safe-area-inset-right)); bottom:max(20px, env(safe-area-inset-bottom));
   width:56px; height:56px; border-radius:50%; z-index:800;
   background:var(--accent); color:var(--accent-ink); border:none;
   display:flex; align-items:center; justify-content:center; cursor:pointer;
@@ -287,7 +293,7 @@ body:not(.authed) .modal, body:not(.authed) .modal-overlay{ display:none; }
 .modal-body button.btn{ width:100%; padding:11px; }
 
 .toast{
-  position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(10px);
+  position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(10px);
   background:var(--green); color:var(--accent-ink); padding:10px 16px; border-radius:20px;
   font-size:13px; font-weight:600; opacity:0; pointer-events:none; white-space:nowrap;
   transition:opacity .25s var(--ease), transform .25s var(--ease-sheet); z-index:1200;
