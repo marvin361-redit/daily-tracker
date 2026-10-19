@@ -13,7 +13,7 @@ function addSubject() {
   const inp = document.getElementById('new-subject');
   const name = inp.value.trim();
   if (!name) return;
-  const s = { id: 'sub' + Date.now(), name };
+  const s = { id: uid('sub'), name };
   blocSubjects.push(s);
   blocSelectedId = s.id;
   inp.value = '';
@@ -49,7 +49,7 @@ function addTask() {
   const inp = document.getElementById('new-task');
   const text = inp.value.trim();
   if (!text || !blocSelectedId) return;
-  const task = { id: 'task' + Date.now() + Math.random().toString(36).slice(2, 6), text, done: false, createdAt: Date.now() };
+  const task = { id: uid('task'), text, done: false, createdAt: Date.now() };
   (blocTasks[blocSelectedId] = blocTasks[blocSelectedId] || []).push(task);
   inp.value = '';
   saveBlocTasks();

@@ -4,6 +4,10 @@ const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 
 function fmt(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
 function pad(n) { return String(n).padStart(2, '0'); }
 
+// Id con prefijo + timestamp + sufijo aleatorio: con solo Date.now(), dos
+// altas en el mismo milisegundo comparten id.
+function uid(prefix) { return prefix + Date.now() + Math.random().toString(36).slice(2, 6); }
+
 function esc(str) {
   return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
