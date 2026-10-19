@@ -75,6 +75,7 @@ function addCategory(type) {
 }
 
 function deleteCategory(type, name) {
+  if (!confirm(`¿Eliminar la categoría "${name}"? Los movimientos que ya la usan la conservan.`)) return;
   if (type === 'expense') { finCatExpense = finCatExpense.filter(c => c !== name); saveFinCatExpense(); }
   else { finCatIncome = finCatIncome.filter(c => c !== name); saveFinCatIncome(); }
   renderFinanzas();
@@ -164,7 +165,10 @@ function renderFinHistory() {
   const monthTx = finTx.filter(t => t.date.startsWith(mKey)).sort((a, b) => b.date.localeCompare(a.date));
   document.getElementById('fin-history').innerHTML = monthTx.length ? monthTx.map(t => {
     if (t.id === finEditingId) {
-      const cats = t.type === 'income' ? finCatIncome : finCatExpense;
+      let cats = t.type === 'income' ? finCatIncome : finCatExpense;
+      // Si la categoría del movimiento se borró, mantenerla como opción: si no,
+      // al guardar se cambiaría en silencio a la primera de la lista.
+      if (!cats.includes(t.category)) cats = [t.category, ...cats];
       return `<div class="fin-row fin-edit-row" data-tx-edit-row="${t.id}">
         <span class="fin-cat">${t.type === 'income' ? 'Ingreso' : 'Gasto'}</span>
         <input type="number" min="0" step="0.01" value="${t.amount}" data-edit-amount aria-label="Monto" style="width:80px;">

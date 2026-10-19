@@ -65,7 +65,9 @@ function toggleTask(id) {
 }
 
 function deleteTask(id) {
-  if (!blocTasks[blocSelectedId]) return;
+  const task = (blocTasks[blocSelectedId] || []).find(t => t.id === id);
+  if (!task) return;
+  if (!confirm(`¿Eliminar la tarea "${task.text}"?`)) return;
   blocTasks[blocSelectedId] = blocTasks[blocSelectedId].filter(t => t.id !== id);
   saveBlocTasks();
   renderBlocMarvin();
