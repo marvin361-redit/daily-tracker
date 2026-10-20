@@ -51,6 +51,7 @@ Todos los guardados nuevos pasan por `guardedSave()`. No se agregaron librerías
   - Valores tal cual están guardados (strings) → restaurar es idéntico byte a byte (verificado).
   - Si una clave tiene un guardado pendiente en la cola, se exporta ese valor (es el más nuevo).
   - Si no se puede leer algo (sin conexión), **no descarga nada** en vez de dar un respaldo incompleto.
+  - Las 18 claves se leen en paralelo y la cola se lee una sola vez: antes eran 18 lecturas seguidas contra Supabase (≈2 s con 120 ms de latencia; ahora ≈0,15 s).
 - **Importar**:
   - Valida todo el archivo: JSON válido, `app` correcta, versión no más nueva, cada valor parseable. Si algo está dañado, no importa nada.
   - Resumen "Ahora vs. Archivo" por cada dato (en negrita lo que cambia), qué no se toca y qué claves desconocidas se ignoran.

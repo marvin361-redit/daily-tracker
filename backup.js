@@ -31,20 +31,19 @@ const BACKUP_KEYS = [
 
 let backupPending = null;
 
-// Valor actual de una clave: si tiene un guardado pendiente en la cola de
-// reintentos, ese es el más nuevo; si no, lo que hay en el storage.
-async function readBackupValue(key) {
-  const queued = readSyncQueue()[key];
-  if (queued) return queued.value;
-  return await safeGet(key);
-}
-
+// Valor actual de cada clave: si tiene un guardado pendiente en la cola de
+// reintentos, ese es el más nuevo; si no, lo que hay en el storage. La cola se
+// lee una sola vez y las lecturas van en paralelo (con Supabase, una por una
+// eran 18 idas y vueltas). Si alguna falla, falla todo: nada de respaldos
+// incompletos.
 async function collectBackupData() {
+  const queue = readSyncQueue();
+  const values = await Promise.all(BACKUP_KEYS.map(({ key }) =>
+    Object.prototype.hasOwnProperty.call(queue, key) ? queue[key].value : safeGet(key)));
   const data = {};
-  for (const { key } of BACKUP_KEYS) {
-    const value = await readBackupValue(key);
-    if (value !== null && value !== undefined) data[key] = value;
-  }
+  BACKUP_KEYS.forEach(({ key }, i) => {
+    if (values[i] !== null && values[i] !== undefined) data[key] = values[i];
+  });
   return data;
 }
 
