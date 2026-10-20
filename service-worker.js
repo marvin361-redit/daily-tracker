@@ -1,4 +1,4 @@
-const CACHE_NAME = 'daily-tracker-v3';
+const CACHE_NAME = 'daily-tracker-v13';
 const APP_SHELL = [
   './index.html',
   './style.css',
@@ -7,11 +7,17 @@ const APP_SHELL = [
   './habits.js',
   './english.js',
   './finance.js',
+  './quick-expense.js',
+  './bloc-marvin.js',
+  './schedule.js',
+  './backup.js',
   './app.js',
   './supabase-config.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './favicon.png',
+  './apple-touch-icon.png',
 ];
 
 self.addEventListener('install', event => {

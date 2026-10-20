@@ -1,6 +1,11 @@
 let dataLoadPromise = null;
 
 async function load() {
+  // Mientras carga, las vistas quedan bloqueadas: editar sobre listas todavía
+  // vacías podría guardar encima de los datos reales.
+  const blocked = [document.getElementById('app-views'), document.getElementById('quick-expense-fab')];
+  document.body.classList.add('loading-data');
+  blocked.forEach(el => { el.inert = true; });
   try {
     dataLoadPromise = loadData();
     await dataLoadPromise;
@@ -9,6 +14,9 @@ async function load() {
     console.error('Error cargando datos:', e);
     showSyncError('No se pudieron cargar tus datos (revisá tu conexión). Los cambios que hagas ahora podrían no reflejar tu historial real hasta reconectar.');
     return;
+  } finally {
+    document.body.classList.remove('loading-data');
+    blocked.forEach(el => { el.inert = false; });
   }
   render();
   maybeOpenQuickExpenseFromHash();
@@ -89,6 +97,16 @@ async function loadData() {
   const rawBlocNotes = await safeGet('blocmarvin-notes');
   try { blocNotes = rawBlocNotes ? JSON.parse(rawBlocNotes) : {}; } catch (e) { blocNotes = {}; }
 
+  const rawBlocTasks = await safeGet('blocmarvin-tasks');
+  try { blocTasks = rawBlocTasks ? JSON.parse(rawBlocTasks) : {}; } catch (e) { blocTasks = {}; }
+
+  const rawSchedBlocks = await safeGet('schedule-blocks');
+  try { schedBlocks = rawSchedBlocks ? JSON.parse(rawSchedBlocks) : []; } catch (e) { schedBlocks = []; }
+  if (!Array.isArray(schedBlocks)) schedBlocks = [];
+
+  const rawSchedDone = await safeGet('schedule-done');
+  try { schedDone = rawSchedDone ? JSON.parse(rawSchedDone) : {}; } catch (e) { schedDone = {}; }
+
   const dateInput = document.getElementById('fin-date');
   if (dateInput && !dateInput.value) dateInput.value = fmt(new Date());
   const hoyJump = document.getElementById('hoy-date-jump');
@@ -108,6 +126,7 @@ function render() {
   renderIngles();
   renderFinanzas();
   renderBlocMarvin();
+  renderSchedule();
 }
 
 function wireStaticEvents() {
@@ -130,6 +149,7 @@ function wireStaticEvents() {
       viewTitle.textContent = t.textContent;
       closeMenu();
       if (t.dataset.view === 'analytics') renderTrendChart();
+      else if (t.dataset.view === 'horario') { renderSchedule(); if (schedTab === 'semana') scrollSchedWeekToToday(); }
       if (t.dataset.view === 'finanzas') renderFinChart();
     });
   });
@@ -157,6 +177,19 @@ function wireStaticEvents() {
   document.getElementById('add-saving-plan-btn').addEventListener('click', addSavingsPlan);
   document.getElementById('add-subject-btn').addEventListener('click', addSubject);
   document.getElementById('new-subject').addEventListener('keydown', e => { if (e.key === 'Enter') addSubject(); });
+  document.getElementById('add-task-btn').addEventListener('click', addTask);
+  document.getElementById('new-task').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+  populateSchedFormOptions();
+  document.getElementById('sched-save-btn').addEventListener('click', saveSchedBlock);
+  document.getElementById('sched-cancel-btn').addEventListener('click', cancelEditSchedBlock);
+  document.getElementById('sched-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveSchedBlock(); });
+  ['sched-day', 'sched-start', 'sched-end'].forEach(id => document.getElementById(id).addEventListener('change', validateSchedForm));
+  document.getElementById('backup-export-btn').addEventListener('click', exportBackup);
+  document.getElementById('backup-file-input').addEventListener('change', e => onBackupFileChosen(e.target));
+  document.getElementById('backup-summary').addEventListener('click', e => {
+    if (e.target.closest('#backup-confirm-btn')) confirmBackupImport();
+    else if (e.target.closest('#backup-cancel-btn')) cancelBackupImport();
+  });
   document.getElementById('bloc-notes-textarea').addEventListener('input', e => onBlocNoteInput(e.target.value));
   document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
@@ -168,7 +201,7 @@ function wireStaticEvents() {
   document.getElementById('quick-expense-amount').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickExpense(); });
 
   document.body.addEventListener('click', e => {
-    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity], [data-select-subject], [data-delete-subject]');
+    const t = e.target.closest('[data-toggle-habit], [data-select-day], [data-toggle-month], [data-toggle-eng], [data-select-eng-day], [data-delete-habit], [data-delete-tx], [data-delete-cat-type], [data-add-funds], [data-delete-goal], [data-edit-tx], [data-save-edit-tx], [data-cancel-edit-tx], [data-select-saving-period], [data-save-saving], [data-delete-saving-plan], [data-delete-eng-activity], [data-select-subject], [data-delete-subject], [data-toggle-task], [data-delete-task], [data-sched-tab], [data-toggle-sched], [data-edit-sched], [data-dup-sched], [data-delete-sched], [data-dup-day], [data-dup-confirm], [data-dup-cancel]');
     if (!t) return;
     if (t.dataset.toggleHabit) { toggle(selectedDate, t.dataset.toggleHabit); }
     else if (t.dataset.selectDay) { selectDay(t.dataset.selectDay); }
@@ -197,6 +230,31 @@ function wireStaticEvents() {
     else if (t.dataset.deleteEngActivity) { deleteEngActivity(t.dataset.deleteEngActivity); }
     else if (t.dataset.selectSubject) { selectSubject(t.dataset.selectSubject); }
     else if (t.dataset.deleteSubject) { deleteSubject(t.dataset.deleteSubject); }
+    else if (t.dataset.toggleTask) { toggleTask(t.dataset.toggleTask); }
+    else if (t.dataset.deleteTask) { deleteTask(t.dataset.deleteTask); }
+    else if (t.dataset.schedTab) { selectSchedTab(t.dataset.schedTab); }
+    else if (t.dataset.toggleSched) { toggleSchedDone(t.dataset.toggleSched); }
+    else if (t.dataset.editSched) { startEditSchedBlock(t.dataset.editSched); }
+    else if (t.dataset.dupSched) { openSchedDuplicate(t.dataset.dupSched); }
+    else if (t.dataset.deleteSched) { deleteSchedBlock(t.dataset.deleteSched); }
+    else if (t.dataset.dupDay) { toggleSchedDupDay(parseInt(t.dataset.dupDay, 10)); }
+    else if (t.dataset.dupConfirm) { confirmSchedDuplicate(); }
+    else if (t.dataset.dupCancel) { openSchedDuplicate(schedDupId); }
+  });
+
+  // Los .chk, días y entradas del menú son <div>: con role + tabindex se
+  // activan con Espacio/Enter como un control nativo.
+  document.body.addEventListener('keydown', e => {
+    if ((e.key === ' ' || e.key === 'Enter') && e.target.matches('[role="checkbox"], [role="button"]')) {
+      e.preventDefault();
+      const attr = [...e.target.attributes].find(a => a.name.startsWith('data-'));
+      e.target.click();
+      // Si el re-render reemplazó el nodo, devolver el foco al nuevo para no perderlo.
+      if (attr && !e.target.isConnected) {
+        const again = document.querySelector(`[${attr.name}="${CSS.escape(attr.value)}"]`);
+        if (again) again.focus();
+      }
+    }
   });
 
   document.body.addEventListener('change', e => {
@@ -265,8 +323,12 @@ async function handleSignOut() {
   finTx = []; finCatExpense = []; finCatIncome = [];
   finGoals = []; finSavingsPlans = []; finSavingsLog = {}; savingsSelectedPeriod = {};
   finEditingId = null;
-  blocSubjects = []; blocNotes = {}; blocSelectedId = null;
+  blocSubjects = []; blocNotes = {}; blocTasks = {}; blocSelectedId = null;
   clearTimeout(blocSaveTimer); clearTimeout(blocIndicatorTimer);
+  schedBlocks = []; schedDone = {}; schedDupId = null; schedTab = 'hoy';
+  resetSchedForm(); stopSchedClock();
+  cancelBackupImport();
+  ['backup-export-status', 'backup-import-status'].forEach(id => setBackupStatus(id, '', ''));
   if (trendChart) { trendChart.destroy(); trendChart = null; }
   if (finChart) { finChart.destroy(); finChart = null; }
 }
