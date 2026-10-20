@@ -52,6 +52,7 @@ Todos los guardados nuevos pasan por `guardedSave()`. No se agregaron librerías
   - Si una clave tiene un guardado pendiente en la cola, se exporta ese valor (es el más nuevo).
   - Si no se puede leer algo (sin conexión), **no descarga nada** en vez de dar un respaldo incompleto.
   - Las 18 claves se leen en paralelo y la cola se lee una sola vez: antes eran 18 lecturas seguidas contra Supabase (≈2 s con 120 ms de latencia; ahora ≈0,15 s).
+  - **Bug real (respaldo con 6 de 16 claves):** con la sesión de Supabase vencida, las lecturas no fallan: salen como anónimas, RLS devuelve 0 filas y eso se confundía con "no existe". Solo entraban las claves que estaban en la cola de reintentos. Ahora el export (1) valida la sesión con `auth.getUser()`; (2) distingue "no existe" de "falló" con `Promise.allSettled`; (3) si el storage dice "no existe" pero la app tiene esos datos cargados, lo cuenta como falla; (4) si algo falla, aborta y lista las claves. Al terminar muestra "Exportadas N claves: …" y "Vacías: …".
 - **Importar**:
   - Valida todo el archivo: JSON válido, `app` correcta, versión no más nueva, cada valor parseable. Si algo está dañado, no importa nada.
   - Resumen "Ahora vs. Archivo" por cada dato (en negrita lo que cambia), qué no se toca y qué claves desconocidas se ignoran.

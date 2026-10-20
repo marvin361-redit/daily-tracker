@@ -31,20 +31,92 @@ const BACKUP_KEYS = [
 
 let backupPending = null;
 
-// Valor actual de cada clave: si tiene un guardado pendiente en la cola de
-// reintentos, ese es el más nuevo; si no, lo que hay en el storage. La cola se
-// lee una sola vez y las lecturas van en paralelo (con Supabase, una por una
-// eran 18 idas y vueltas). Si alguna falla, falla todo: nada de respaldos
-// incompletos.
+// ¿La app tiene datos cargados en memoria para esta clave? Sirve para detectar
+// una lectura que dice "no existe" cuando en realidad no pudo ver la fila
+// (sesión de Supabase vencida: RLS devuelve 0 filas sin error).
+const BACKUP_IN_MEMORY = {
+  'habits': () => habits.length > 0,
+  'logs': () => Object.keys(logs).length > 0,
+  'notes': () => Object.keys(notes).length > 0,
+  'eng-activities': () => engActivities.length > 0,
+  'eng-logs': () => Object.keys(engLogs).length > 0,
+  'eng-base': () => engBase !== DEFAULT_ENG_BASE,
+  'eng-goal': () => engWeekGoal !== DEFAULT_ENG_GOAL,
+  'fin-tx': () => finTx.length > 0,
+  'fin-cat-expense': () => finCatExpense.length > 0,
+  'fin-cat-income': () => finCatIncome.length > 0,
+  'fin-goals': () => finGoals.length > 0,
+  'fin-savings-plans': () => finSavingsPlans.length > 0,
+  'fin-savings-log': () => Object.keys(finSavingsLog).length > 0,
+  'blocmarvin-subjects': () => blocSubjects.length > 0,
+  'blocmarvin-notes': () => Object.keys(blocNotes).length > 0,
+  'blocmarvin-tasks': () => Object.keys(blocTasks).length > 0,
+  'schedule-blocks': () => schedBlocks.length > 0,
+  'schedule-done': () => Object.keys(schedDone).length > 0,
+};
+
+class BackupReadError extends Error {}
+
+// Con Supabase, una sesión vencida no da error al leer: las consultas salen
+// como anónimas y RLS devuelve 0 filas, igual que una clave que no existe.
+// getUser() valida el token contra el servidor.
+async function assertBackupSession() {
+  if (S !== supabaseStorage) return;
+  let user = null;
+  try {
+    const { data, error } = await supabaseClient.auth.getUser();
+    if (!error) user = data && data.user;
+  } catch (e) { /* sin conexión: se trata igual que sesión inválida */ }
+  if (!user || user.id !== currentUserId) {
+    throw new BackupReadError('Tu sesión venció o no se pudo verificar. Cerrá sesión, volvé a entrar y exportá de nuevo. No se descargó nada.');
+  }
+}
+
+// Lee todas las claves. Devuelve { data, empty }: data tiene las que existen,
+// empty las que de verdad no existen. Si alguna lectura falla (red, error del
+// servidor, o "no existe" para algo que la app tiene cargado), lanza
+// BackupReadError con la lista: nunca devuelve un respaldo parcial.
+// El valor en la cola de reintentos tiene prioridad (es el más nuevo). La cola
+// se lee una vez y las lecturas van en paralelo.
 async function collectBackupData() {
+  await assertBackupSession();
   const queue = readSyncQueue();
-  const values = await Promise.all(BACKUP_KEYS.map(({ key }) =>
-    Object.prototype.hasOwnProperty.call(queue, key) ? queue[key].value : safeGet(key)));
+  const results = await Promise.allSettled(BACKUP_KEYS.map(({ key }) =>
+    Object.prototype.hasOwnProperty.call(queue, key) ? Promise.resolve(queue[key].value) : safeGet(key)));
   const data = {};
+  const empty = [];
+  const failed = [];
   BACKUP_KEYS.forEach(({ key }, i) => {
-    if (values[i] !== null && values[i] !== undefined) data[key] = values[i];
+    const r = results[i];
+    if (r.status === 'rejected') {
+      console.error('Respaldo: no se pudo leer "' + key + '":', r.reason);
+      failed.push(key);
+    } else if (typeof r.value === 'string') {
+      data[key] = r.value;
+    } else if (r.value === null || r.value === undefined) {
+      if (BACKUP_IN_MEMORY[key] && BACKUP_IN_MEMORY[key]()) {
+        console.error('Respaldo: "' + key + '" no vino del storage pero la app lo tiene cargado.');
+        failed.push(key);
+      } else {
+        empty.push(key);
+      }
+    } else {
+      console.error('Respaldo: "' + key + '" tiene un valor que no es texto:', r.value);
+      failed.push(key);
+    }
   });
-  return data;
+  if (failed.length) {
+    throw new BackupReadError(`No se pudieron leer ${failed.length} de ${BACKUP_KEYS.length} claves: ${failed.join(', ')}. ` +
+      'Revisá tu conexión o volvé a iniciar sesión. No se descargó nada para no darte un respaldo incompleto.');
+  }
+  return { data, empty };
+}
+
+function backupExportSummary(data, empty) {
+  const keys = Object.keys(data);
+  let text = `Exportadas ${keys.length} claves: ${keys.join(', ')}.`;
+  if (empty.length) text += `\nVacías (no tenés datos guardados): ${empty.join(', ')}.`;
+  return text;
 }
 
 function downloadBackupFile(data, prefix) {
@@ -71,12 +143,13 @@ async function exportBackup() {
   btn.disabled = true;
   setBackupStatus('backup-export-status', 'Preparando respaldo...', '');
   try {
-    const data = await collectBackupData();
+    const { data, empty } = await collectBackupData();
     downloadBackupFile(data, 'daily-tracker-respaldo');
-    setBackupStatus('backup-export-status', `Listo: ${Object.keys(data).length} grupos de datos exportados.`, 'ok');
+    setBackupStatus('backup-export-status', backupExportSummary(data, empty), 'ok');
   } catch (e) {
     console.error('Error exportando respaldo:', e);
-    setBackupStatus('backup-export-status', 'No se pudieron leer tus datos (revisá tu conexión). No se descargó nada para no darte un respaldo incompleto.', 'error');
+    setBackupStatus('backup-export-status', e instanceof BackupReadError ? e.message
+      : 'No se pudieron leer tus datos (revisá tu conexión). No se descargó nada para no darte un respaldo incompleto.', 'error');
   } finally {
     btn.disabled = false;
   }
@@ -139,9 +212,10 @@ async function onBackupFileChosen(input) {
   setBackupStatus('backup-import-status', 'Leyendo tus datos actuales para comparar...', '');
   let current;
   try {
-    current = await collectBackupData();
+    current = (await collectBackupData()).data;
   } catch (e) {
-    setBackupStatus('backup-import-status', 'No se pudieron leer tus datos actuales (revisá tu conexión). Probá de nuevo con conexión.', 'error');
+    setBackupStatus('backup-import-status', e instanceof BackupReadError ? e.message.replace('No se descargó nada para no darte un respaldo incompleto.', 'No se importó nada.')
+      : 'No se pudieron leer tus datos actuales (revisá tu conexión). Probá de nuevo con conexión.', 'error');
     return;
   }
   setBackupStatus('backup-import-status', '', '');
@@ -200,7 +274,7 @@ async function confirmBackupImport() {
   if (safety && safety.checked) {
     // Releer justo ahora por si algo cambió desde que se eligió el archivo.
     let fresh = current;
-    try { fresh = await collectBackupData(); } catch (e) { /* sin conexión: usar la lectura previa */ }
+    try { fresh = (await collectBackupData()).data; } catch (e) { /* sin conexión: usar la lectura previa (que fue completa) */ }
     downloadBackupFile(fresh, 'daily-tracker-antes-de-importar');
   }
 

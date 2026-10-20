@@ -369,6 +369,7 @@ button.btn:disabled{ opacity:.4; cursor:default; transform:none; }
 
 /* ---------- Respaldo ---------- */
 .sched-form-msg.ok{ color:var(--green); }
+#backup-export-status{ white-space:pre-line; overflow-wrap:anywhere; }
 .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .backup-file-btn{ display:inline-block; }
 .backup-file-btn + .sched-form-msg, #backup-export-btn + .sched-form-msg{ margin-top:12px; }
