@@ -373,6 +373,18 @@ async function bootstrap() {
   });
 }
 
+// Gráficos con la tipografía del sistema, y redibujados si cambia el tema claro/oscuro.
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  Chart.defaults.font.size = 12;
+}
+if (window.matchMedia) {
+  const schemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const onSchemeChange = () => { renderTrendChart(); renderFinChart(); };
+  if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onSchemeChange);
+  else if (schemeQuery.addListener) schemeQuery.addListener(onSchemeChange);
+}
+
 wireStaticEvents();
 bootstrap();
 

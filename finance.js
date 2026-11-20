@@ -215,12 +215,12 @@ function renderFinChart() {
   const labels = Object.keys(byCat);
   const vals = Object.values(byCat);
 
-  const gridColor = '#2B2C2F';
-  const textColor = '#8C8D90';
+  const { gridColor, textColor, neg } = chartTheme();
 
   if (finChart) {
     finChart.data.labels = labels;
     finChart.data.datasets[0].data = vals;
+    finChart.data.datasets[0].backgroundColor = neg;
     finChart.options.scales.y.ticks.color = textColor;
     finChart.options.scales.x.ticks.color = textColor;
     finChart.options.scales.y.grid.color = gridColor;
@@ -231,7 +231,7 @@ function renderFinChart() {
 
   finChart = new Chart(canvas, {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'Gasto', data: vals, backgroundColor: '#E8A33D', borderRadius: 4 }] },
+    data: { labels, datasets: [{ label: 'Gasto', data: vals, backgroundColor: neg, borderRadius: 6, maxBarThickness: 40 }] },
     options: {
       responsive: true,
       maintainAspectRatio: false,

@@ -145,7 +145,11 @@ function renderIngles() {
   const today = fmt(new Date());
   const total = engTotalHours();
 
-  document.getElementById('eng-ring').textContent = total.toFixed(1) + 'h';
+  const engRing = document.getElementById('eng-ring');
+  engRing.textContent = total.toFixed(1) + 'h';
+  // El anillo muestra el avance hacia el próximo nivel (lleno si ya se alcanzaron todos).
+  const nextLevel = ENG_LEVELS.find(lv => total < lv.hours);
+  engRing.style.setProperty('--p', nextLevel ? Math.round((total / nextLevel.hours) * 100) : 100);
   document.getElementById('eng-level').textContent = engLevelInfo(total);
   document.getElementById('eng-base-input').value = engBase;
 
@@ -171,10 +175,10 @@ function renderIngles() {
     const remaining = Math.max(0, lv.hours - total);
     return `<div class="goal-row">
       <div class="row">
-        <span style="font-size:13px;">${lv.name}<span style="color:var(--muted);"> · ${lv.hours}h</span></span>
-        <span style="font-size:12px;color:${reached ? 'var(--green)' : 'var(--muted)'};">${reached ? 'Alcanzado' : 'Faltan ' + remaining.toFixed(1) + 'h'}</span>
+        <span>${lv.name}<span style="color:var(--muted);"> · ${lv.hours}h</span></span>
+        <span style="font-size:13px;color:var(--muted);${reached ? 'color:var(--text);font-weight:600;' : ''}">${reached ? 'Alcanzado' : 'Faltan ' + remaining.toFixed(1) + 'h'}</span>
       </div>
-      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${reached ? 'var(--green)' : 'var(--accent)'};"></div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%;"></div></div>
     </div>`;
   }).join('');
 
@@ -189,7 +193,6 @@ function renderIngles() {
   const weekPct = engWeekGoal > 0 ? Math.min(100, Math.round((weekHours / engWeekGoal) * 100)) : 0;
   const wbar = document.getElementById('eng-week-bar');
   wbar.style.width = weekPct + '%';
-  wbar.style.background = weekHours >= engWeekGoal && engWeekGoal > 0 ? 'var(--green)' : 'var(--accent)';
 
   const last7 = [];
   const dd = new Date();

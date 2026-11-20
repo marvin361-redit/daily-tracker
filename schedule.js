@@ -1,7 +1,7 @@
 // Horario semanal: plantilla de bloques por día de la semana + check diario.
 // day usa la convención de Date.getDay() (0 = domingo), igual que DOW en utils.js.
 const SCHED_COLORS = [
-  { id: 'accent', label: 'Claro' },
+  { id: 'accent', label: 'Tinta' },
   { id: 'green', label: 'Verde' },
   { id: 'red', label: 'Rojo' },
   { id: 'muted', label: 'Gris' },

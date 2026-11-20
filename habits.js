@@ -90,9 +90,7 @@ function renderHoy() {
   const pct = dayPct(selectedDate);
   const ring = document.getElementById('hoy-ring');
   ring.textContent = pct + '%';
-  const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--accent)' : 'var(--red)';
-  ring.style.borderColor = color;
-  ring.style.color = color;
+  ring.style.setProperty('--p', pct);
 
   const list = document.getElementById('hoy-list');
   if (habits.length === 0) {
@@ -133,10 +131,10 @@ function renderGoals() {
     const met = done >= goal;
     return `<div class="goal-row">
       <div class="row">
-        <span style="font-size:13px;">${esc(h.name)}</span>
-        <span style="font-size:12px;color:${met ? 'var(--green)' : 'var(--muted)'};">${done}/${goal}</span>
+        <span>${esc(h.name)}</span>
+        <span style="font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);${met ? 'color:var(--text);font-weight:600;' : ''}">${done}/${goal}</span>
       </div>
-      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${met ? 'var(--green)' : 'var(--accent)'};"></div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%;"></div></div>
     </div>`;
   }).join('');
 }
@@ -163,7 +161,9 @@ function renderMes() {
   });
   document.getElementById('month-table').innerHTML = html || '<tr><td class="empty">Sin hábitos aún.</td></tr>';
   const pct = totalPossible ? Math.round((totalDone / totalPossible) * 100) : 0;
-  document.getElementById('mes-ring').textContent = pct + '%';
+  const mesRing = document.getElementById('mes-ring');
+  mesRing.textContent = pct + '%';
+  mesRing.style.setProperty('--p', pct);
 }
 
 function renderAnalytics() {
@@ -196,7 +196,7 @@ function renderAnalytics() {
     </div>`).join('') : '<div class="empty">Aún no hay datos suficientes.</div>';
 
   document.getElementById('an-rank').innerHTML = stats.slice(0, 5).map((s, i) => `
-    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${esc(s.name)}</span><span style="color:var(--accent);font-weight:600;">${s.pct}%</span></div>`
+    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${esc(s.name)}</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">${s.pct}%</span></div>`
   ).join('') || '<div class="empty">-</div>';
 
   if (document.getElementById('view-analytics').classList.contains('active')) renderTrendChart();
@@ -217,12 +217,13 @@ function renderTrendChart() {
     vals.push(dayPct(fmt(x)));
   }
 
-  const gridColor = '#2B2C2F';
-  const textColor = '#8C8D90';
+  const { gridColor, textColor, ink, inkSoft } = chartTheme();
 
   if (trendChart) {
     trendChart.data.labels = labels;
     trendChart.data.datasets[0].data = vals;
+    trendChart.data.datasets[0].borderColor = ink;
+    trendChart.data.datasets[0].backgroundColor = inkSoft;
     trendChart.options.scales.y.ticks.color = textColor;
     trendChart.options.scales.x.ticks.color = textColor;
     trendChart.options.scales.y.grid.color = gridColor;
@@ -238,8 +239,8 @@ function renderTrendChart() {
       datasets: [{
         label: '% cumplido',
         data: vals,
-        borderColor: '#E8A33D',
-        backgroundColor: 'rgba(232,163,61,0.1)',
+        borderColor: ink,
+        backgroundColor: inkSoft,
         fill: true,
         tension: 0.3,
         pointRadius: 0,
