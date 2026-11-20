@@ -43,13 +43,13 @@ function saveQuickExpense() {
   saveFinTx();
   renderFinanzas();
   closeQuickExpenseModal();
-  showToast('Gasto guardado ✓');
+  showToast('Gasto guardado');
 }
 
 function showToast(msg) {
   const el = document.getElementById('toast');
   if (!el) return;
-  el.textContent = msg;
+  el.innerHTML = icon('check') + '<span>' + esc(msg) + '</span>';
   el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 1800);

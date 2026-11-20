@@ -84,8 +84,11 @@ function selectDay(ds) {
 
 function renderHoy() {
   const d = new Date(selectedDate + 'T00:00:00');
-  document.getElementById('hoy-title').textContent =
-    selectedDate === fmt(new Date()) ? 'Hoy' : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+  // El título de sección ya dice "Hoy": la fecha solo aparece al mirar otro día.
+  const hoyTitle = document.getElementById('hoy-title');
+  const isToday = selectedDate === fmt(new Date());
+  hoyTitle.hidden = isToday;
+  hoyTitle.textContent = isToday ? '' : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
 
   const pct = dayPct(selectedDate);
   const ring = document.getElementById('hoy-ring');
@@ -243,6 +246,7 @@ function renderTrendChart() {
         backgroundColor: inkSoft,
         fill: true,
         tension: 0.3,
+        cubicInterpolationMode: 'monotone', // la curva no pasa por encima ni debajo de los valores reales
         pointRadius: 0,
         borderWidth: 2,
       }],

@@ -191,7 +191,10 @@ function wireStaticEvents() {
     else if (e.target.closest('#backup-cancel-btn')) cancelBackupImport();
   });
   document.getElementById('bloc-notes-textarea').addEventListener('input', e => onBlocNoteInput(e.target.value));
-  document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
+  const hoyJumpInput = document.getElementById('hoy-date-jump');
+  hoyJumpInput.addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
+  // En escritorio el input invisible no abre el calendario solo: pedirlo explícitamente.
+  hoyJumpInput.addEventListener('click', e => { try { if (e.target.showPicker) e.target.showPicker(); } catch (err) {} });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
 
   document.getElementById('quick-expense-fab').addEventListener('click', openQuickExpenseModal);

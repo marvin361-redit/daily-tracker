@@ -48,3 +48,8 @@ function chartTheme() {
     neg: cssVar('--neg'),
   };
 }
+
+// Ícono de línea del sprite de index.html (hereda el color del texto).
+function icon(name, cls) {
+  return `<svg class="i${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+}
