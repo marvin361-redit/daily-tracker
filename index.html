@@ -408,19 +408,23 @@
 </div>
 </div>
 
-<button class="fab glass" id="quick-expense-fab" title="Gasto rápido" aria-label="Agregar gasto rápido">
+<button class="fab glass" id="quick-expense-fab" title="Movimiento rápido" aria-label="Agregar movimiento rápido">
   <svg class="i" aria-hidden="true"><use href="#i-plus"/></svg>
 </button>
 
 <div class="modal-overlay" id="quick-expense-overlay"></div>
-<div class="modal glass" id="quick-expense-modal">
+<div class="modal glass" id="quick-expense-modal" role="dialog" aria-modal="true" aria-labelledby="quick-move-title">
   <div class="modal-header">
-    <strong>Gasto rápido</strong>
+    <strong id="quick-move-title">Movimiento rápido</strong>
     <button class="icon-btn" id="quick-expense-close-btn" aria-label="Cerrar">
       <svg class="i" aria-hidden="true"><use href="#i-close"/></svg>
     </button>
   </div>
   <div class="modal-body">
+    <div class="seg" id="quick-move-type" role="radiogroup" aria-label="Tipo de movimiento">
+      <button type="button" class="seg-btn active" role="radio" aria-checked="true" data-quick-type="expense">Gasto</button>
+      <button type="button" class="seg-btn" role="radio" aria-checked="false" data-quick-type="income" tabindex="-1">Ingreso</button>
+    </div>
     <input type="number" id="quick-expense-amount" aria-label="Monto (Bs)" placeholder="Monto" min="0" step="0.01" inputmode="decimal" autocomplete="off">
     <select id="quick-expense-category" aria-label="Categoría"></select>
     <button class="btn" id="quick-expense-save-btn">Guardar</button>

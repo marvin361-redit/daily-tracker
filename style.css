@@ -510,11 +510,32 @@ body:not(.authed) .fab{ display:none; }
 }
 .modal.open{ transform:translate(-50%, 0); box-shadow:var(--shadow-3); }
 body:not(.authed) .modal, body:not(.authed) .modal-overlay{ display:none; }
+/* Pantallas anchas: diálogo centrado en vez de hoja pegada abajo. */
+@media (min-width: 600px){
+  .modal{
+    top:50%; bottom:auto; border-bottom:1px solid var(--glass-border); border-radius:var(--r-sheet);
+    padding-bottom:var(--s-5); opacity:0; pointer-events:none;
+    transform:translate(-50%, -46%) scale(.97);
+    transition:transform .3s var(--ease-sheet), opacity .2s var(--ease), box-shadow .3s var(--ease);
+  }
+  .modal.open{ opacity:1; pointer-events:auto; transform:translate(-50%, -50%) scale(1); }
+}
 
 .modal-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--s-4); font-size:var(--fs-headline); }
 .modal-body{ display:flex; flex-direction:column; gap:10px; }
 .modal-body input, .modal-body select{ min-height:48px; }
 .modal-body button.btn{ width:100%; min-height:50px; font-size:var(--fs-headline); }
+
+/* Control segmentado estilo iOS (Gasto / Ingreso). */
+.seg{ display:flex; gap:2px; padding:2px; background:var(--fill); border-radius:var(--r-control); }
+.seg-btn{
+  flex:1; min-height:36px; border:none; border-radius:8px; background:transparent;
+  color:var(--label); font:inherit; font-size:var(--fs-subhead); font-weight:500; cursor:pointer;
+  transition:background .2s var(--ease), box-shadow .2s var(--ease), transform .1s var(--ease);
+}
+.seg-btn:active{ transform:scale(.97); }
+.seg-btn.active{ background:var(--segment-thumb); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.04); }
+@media (pointer: coarse){ .seg-btn{ min-height:var(--tap); } }
 
 .toast{
   position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(10px);

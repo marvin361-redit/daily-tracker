@@ -222,6 +222,19 @@ function wireStaticEvents() {
   document.getElementById('quick-expense-close-btn').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-overlay').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-save-btn').addEventListener('click', saveQuickExpense);
+  const quickSeg = document.getElementById('quick-move-type');
+  quickSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-quick-type]');
+    if (b) setQuickMoveType(b.dataset.quickType);
+  });
+  // Flechas para cambiar de tipo, como un grupo de radios.
+  quickSeg.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault();
+    setQuickMoveType(quickMoveType === 'expense' ? 'income' : 'expense');
+    quickSeg.querySelector('.seg-btn.active').focus();
+  });
+  window.addEventListener('hashchange', maybeOpenQuickExpenseFromHash);
   document.getElementById('quick-expense-amount').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickExpense(); });
 
   document.body.addEventListener('click', e => {
