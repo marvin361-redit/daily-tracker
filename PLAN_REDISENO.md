@@ -20,7 +20,7 @@
 2. **Navegación** — HECHA. Menú hamburguesa con vidrio, íconos del
    sprite, animación suave y sección activa marcada. En pantallas de más de
    1024px, barra lateral fija en vez de hamburguesa.
-3. **Movimiento rápido** — PENDIENTE. El modal "Gasto rápido" pasa a
+3. **Movimiento rápido** — HECHA (con diálogo centrado en desktop). El modal "Gasto rápido" pasa a
    "Movimiento rápido" con selector segmentado Gasto / Ingreso estilo iOS.
    Las categorías cambian según el tipo (`fin-cat-expense` o
    `fin-cat-income`). Reusar `saveFinTx()` con type `'expense'` o
