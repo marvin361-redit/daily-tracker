@@ -60,6 +60,7 @@ function saveQuickExpense() {
   finTx.push({ id: 't' + Date.now(), type, amount: Math.abs(amount), category, date: fmt(new Date()), note: '' });
   saveFinTx();
   renderFinanzas();
+  renderReportes();
   closeQuickExpenseModal();
   showToast(type === 'income' ? 'Ingreso guardado' : 'Gasto guardado');
 }

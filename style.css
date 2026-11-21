@@ -537,6 +537,36 @@ body:not(.authed) .modal, body:not(.authed) .modal-overlay{ display:none; }
 .seg-btn.active{ background:var(--segment-thumb); font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.12), 0 1px 1px rgba(0,0,0,.04); }
 @media (pointer: coarse){ .seg-btn{ min-height:var(--tap); } }
 
+/* ---------- Reportes ---------- */
+.report-period{ margin-bottom:var(--s-5); }
+.report-section{
+  display:flex; align-items:center; gap:var(--s-2); margin:var(--s-6) 0 var(--s-3);
+  font-size:var(--fs-title3); font-weight:700; letter-spacing:-.3px; color:var(--label);
+}
+.report-section:first-of-type{ margin-top:0; }
+.report-section .i{ width:22px; height:22px; color:var(--label-2); }
+.report-note{ margin:calc(-1 * var(--s-2)) var(--s-1) 0; }
+#view-reportes .chart-wrap[hidden], #view-reportes .hm-scroll[hidden]{ display:none; }
+#view-reportes .empty[hidden], .report-note[hidden]{ display:none; }
+
+/* Mapa de calor: 53 semanas × 7 días, intensidad en tinta. */
+.hm-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:var(--s-1); }
+.heatmap{ --hm:11px; --hm-gap:3px; width:max-content; }
+.hm-months{ display:grid; grid-template-columns:repeat(53, var(--hm)); column-gap:var(--hm-gap); height:16px; font-size:var(--fs-caption2); color:var(--label-2); }
+.hm-months span{ white-space:nowrap; }
+.hm-grid{ display:grid; grid-template-rows:repeat(7, var(--hm)); grid-auto-flow:column; grid-auto-columns:var(--hm); gap:var(--hm-gap); }
+.hm-cell{ display:inline-block; width:var(--hm, 11px); height:var(--hm, 11px); border-radius:3px; background:var(--fill); }
+.hm-cell[data-l="1"]{ background:color-mix(in srgb, var(--label) 25%, var(--fill)); }
+.hm-cell[data-l="2"]{ background:color-mix(in srgb, var(--label) 50%, var(--fill)); }
+.hm-cell[data-l="3"]{ background:color-mix(in srgb, var(--label) 75%, var(--fill)); }
+.hm-cell[data-l="4"]{ background:var(--label); }
+.hm-future{ background:transparent; }
+.hm-legend{ display:flex; align-items:center; justify-content:flex-end; gap:3px; margin-top:var(--s-3); font-size:var(--fs-caption); color:var(--label-2); }
+.hm-legend .hm-cell{ --hm:11px; }
+.hm-legend .hm-cell:first-of-type{ margin-left:var(--s-1); }
+.hm-legend .hm-cell:last-of-type{ margin-right:var(--s-1); }
+@media (min-width: 1025px){ .heatmap{ --hm:10px; } }
+
 .toast{
   position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(10px);
   background:var(--label); color:var(--on-ink); padding:10px 18px; border-radius:var(--r-pill);

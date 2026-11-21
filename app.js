@@ -127,6 +127,7 @@ function render() {
   renderFinanzas();
   renderBlocMarvin();
   renderSchedule();
+  renderReportes();
 }
 
 function wireStaticEvents() {
@@ -172,6 +173,7 @@ function wireStaticEvents() {
       if (t.dataset.view === 'analytics') renderTrendChart();
       else if (t.dataset.view === 'horario') { renderSchedule(); if (schedTab === 'semana') scrollSchedWeekToToday(); }
       if (t.dataset.view === 'finanzas') renderFinChart();
+      if (t.dataset.view === 'reportes') renderReportes();
     });
   });
 
@@ -222,6 +224,19 @@ function wireStaticEvents() {
   document.getElementById('quick-expense-close-btn').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-overlay').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-save-btn').addEventListener('click', saveQuickExpense);
+  const periodSeg = document.getElementById('report-period');
+  periodSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-period]');
+    if (b) setReportPeriod(b.dataset.period);
+  });
+  periodSeg.addEventListener('keydown', e => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const order = Object.keys(REPORT_PERIODS);
+    setReportPeriod(order[(order.indexOf(reportPeriod) + step + order.length) % order.length]);
+    periodSeg.querySelector('.seg-btn.active').focus();
+  });
   const quickSeg = document.getElementById('quick-move-type');
   quickSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-quick-type]');
@@ -368,6 +383,7 @@ async function handleSignOut() {
   ['backup-export-status', 'backup-import-status'].forEach(id => setBackupStatus(id, '', ''));
   if (trendChart) { trendChart.destroy(); trendChart = null; }
   if (finChart) { finChart.destroy(); finChart = null; }
+  destroyReportCharts();
 }
 
 function onAuthed(user) {
@@ -417,7 +433,7 @@ if (typeof Chart !== 'undefined') {
 }
 if (window.matchMedia) {
   const schemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  const onSchemeChange = () => { renderTrendChart(); renderFinChart(); };
+  const onSchemeChange = () => { renderTrendChart(); renderFinChart(); renderReportes(); };
   if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onSchemeChange);
   else if (schemeQuery.addListener) schemeQuery.addListener(onSchemeChange);
 }
