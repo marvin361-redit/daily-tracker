@@ -427,7 +427,7 @@ function renderFinTips() {
   if (catEntries.length && monthExpense > 0) {
     const [topCat, topAmt] = catEntries[0];
     const pct = Math.round((topAmt / monthExpense) * 100);
-    if (pct >= 40) dynamicTips.push({ kind: 'alert', text: `"${esc(topCat)}" es tu categoría más grande este mes (${pct}% de tus gastos).` });
+    if (pct >= 40) dynamicTips.push({ kind: 'info', text: `"${esc(topCat)}" es tu categoría más grande este mes (${pct}% de tus gastos).` });
   }
 
   const html = dynamicTips.map(t => `<div class="tip-row dynamic">${icon(t.kind)}<span>${t.text}</span></div>`).join('')

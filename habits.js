@@ -91,6 +91,9 @@ function renderHoy() {
   hoyTitle.textContent = isToday ? '' : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
 
   const pct = dayPct(selectedDate);
+  const doneCount = habits.filter(h => (logs[selectedDate] || {})[h.id]).length;
+  document.getElementById('hoy-count').textContent =
+    `${doneCount} de ${habits.length} ${habits.length === 1 ? 'hábito' : 'hábitos'}`;
   const ring = document.getElementById('hoy-ring');
   ring.textContent = pct + '%';
   ring.style.setProperty('--p', pct);

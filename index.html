@@ -100,8 +100,12 @@
 <div id="app-views">
 <div class="view active" id="view-hoy">
   <div class="card">
-    <div class="row hoy-head"><strong id="hoy-title" hidden></strong>
-      <div class="ring" id="hoy-ring">0%</div>
+    <div class="row hoy-head">
+      <div class="hoy-head-text">
+        <span class="hoy-date" id="hoy-title" hidden></span>
+        <strong id="hoy-count">0 de 0 hábitos</strong>
+      </div>
+      <div class="ring small" id="hoy-ring">0%</div>
     </div>
     <div id="hoy-list"></div>
   </div>
@@ -183,11 +187,12 @@
     <div id="eng-progress"></div>
   </div>
   <div class="card">
-    <div class="date-jump">
-      <span class="sub" style="margin:0;">Ir a fecha:</span>
-      <input type="date" id="eng-date-jump" aria-label="Ir a fecha">
+    <div class="row"><strong id="eng-day-title">Actividades de hoy</strong>
+      <label class="icon-btn date-icon-btn head-end-btn" title="Ir a fecha">
+        <svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg>
+        <input type="date" id="eng-date-jump" aria-label="Ir a fecha">
+      </label>
     </div>
-    <div class="row"><strong id="eng-day-title">Actividades de hoy</strong></div>
     <div id="eng-list"></div>
 
     <div class="eng-activities-editor">

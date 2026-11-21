@@ -191,10 +191,15 @@ body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
 .row{ display:flex; align-items:center; justify-content:space-between; gap:var(--s-3); margin-bottom:var(--s-3); }
 .row > strong{ font-size:var(--fs-headline); letter-spacing:-.2px; }
 .row > strong[hidden]{ display:none; }
-.hoy-head{ justify-content:flex-end; }
-.hoy-head > strong:not([hidden]){ margin-right:auto; }
-.hoy-head > strong::first-letter{ text-transform:uppercase; }
+.hoy-head-text{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.hoy-head-text strong{ font-size:var(--fs-headline); letter-spacing:-.2px; font-variant-numeric:tabular-nums; }
+.hoy-date{ font-size:var(--fs-footnote); color:var(--label-2); }
+.hoy-date[hidden]{ display:none; }
+.hoy-date::first-letter{ text-transform:uppercase; }
+.hoy-head .ring{ width:48px; height:48px; }
+.hoy-head .ring::before{ inset:4px; }
 .week-head-end{ display:flex; align-items:center; gap:var(--s-1); margin-right:-10px; }
+.head-end-btn{ margin-right:-10px; flex-shrink:0; }
 /* El input de fecha queda invisible sobre el ícono: tocarlo abre el selector nativo. */
 .date-icon-btn{ position:relative; overflow:hidden; }
 .date-icon-btn input[type="date"]{
