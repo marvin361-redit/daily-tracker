@@ -53,7 +53,7 @@ function addHabit() {
   const inp = document.getElementById('new-habit');
   const name = inp.value.trim();
   if (!name) return;
-  habits.push({ id: 'h' + Date.now(), name, goal: 7 });
+  habits.push({ id: uid('h'), name, goal: 7 });
   inp.value = '';
   saveHabits();
   render();
@@ -272,6 +272,6 @@ function renderEditor() {
     <div class="habit-item">
       <input type="text" value="${esc(h.name)}" data-rename-habit="${h.id}" aria-label="Nombre del hábito">
       <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" aria-label="Meta semanal de ${esc(h.name)} (días)" data-goal-habit="${h.id}">
-      <button class="danger" data-delete-habit="${h.id}">Eliminar</button>
+      <button class="icon-btn icon-btn-danger" data-delete-habit="${h.id}" title="Eliminar" aria-label="Eliminar ${esc(h.name)}"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
     </div>`).join('') : '<div class="empty">No tenés hábitos todavía. Agregá uno abajo.</div>';
 }

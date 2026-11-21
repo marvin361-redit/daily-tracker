@@ -61,7 +61,7 @@ function addEngActivity() {
   if (!name) return;
   if (isNaN(mins) || mins < 0) mins = 0;
   if (mins > 1440) mins = 1440;
-  engActivities.push({ id: 'ea' + Date.now(), name, defaultMinutes: mins });
+  engActivities.push({ id: uid('ea'), name, defaultMinutes: mins });
   nameInp.value = ''; minInp.value = '';
   saveEngActivities();
   renderIngles();
@@ -102,7 +102,7 @@ function renderEngActivitiesEditor() {
     <div class="habit-item">
       <input type="text" value="${esc(a.name)}" data-rename-eng-activity="${a.id}" aria-label="Nombre de la actividad">
       <input type="number" min="0" max="1440" value="${a.defaultMinutes}" title="Minutos típicos" aria-label="Minutos típicos de ${esc(a.name)}" data-eng-activity-minutes="${a.id}">
-      <button class="danger" data-delete-eng-activity="${a.id}" ${engActivities.length <= 1 ? 'disabled title="Debe quedar al menos una actividad"' : ''}>Eliminar</button>
+      <button class="icon-btn icon-btn-danger" data-delete-eng-activity="${a.id}" aria-label="Eliminar ${esc(a.name)}" ${engActivities.length <= 1 ? 'disabled title="Debe quedar al menos una actividad"' : 'title="Eliminar"'}><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
     </div>`).join('');
 }
 

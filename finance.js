@@ -42,7 +42,7 @@ function addTransaction() {
   let date = document.getElementById('fin-date').value;
   if (!date) date = fmt(new Date());
   const note = document.getElementById('fin-note').value.trim();
-  finTx.push({ id: 't' + Date.now(), type, amount, category, date, note });
+  finTx.push({ id: uid('t'), type, amount, category, date, note });
   amountInp.value = '';
   document.getElementById('fin-note').value = '';
   saveFinTx();
@@ -92,7 +92,7 @@ function addGoal() {
   const name = nameInp.value.trim();
   const target = clampNonNegative(targetInp.value, 0);
   if (!name || target <= 0) return;
-  finGoals.push({ id: 'g' + Date.now(), name, target, saved: 0 });
+  finGoals.push({ id: uid('g'), name, target, saved: 0 });
   nameInp.value = ''; targetInp.value = '';
   saveFinGoals();
   renderFinanzas();
@@ -333,7 +333,7 @@ function addSavingsPlan() {
   const freq = freqSel.value;
   const target = clampNonNegative(targetInp.value, 0);
   if (!name || target <= 0) return;
-  finSavingsPlans.push({ id: 'sp' + Date.now(), name, frequency: freq, targetAmount: target });
+  finSavingsPlans.push({ id: uid('sp'), name, frequency: freq, targetAmount: target });
   nameInp.value = ''; targetInp.value = '';
   saveFinSavingsPlans();
   renderFinanzas();

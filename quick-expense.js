@@ -57,7 +57,7 @@ function saveQuickExpense() {
   }
   const type = quickMoveType;
   const category = document.getElementById('quick-expense-category').value || 'Otros';
-  finTx.push({ id: 't' + Date.now(), type, amount: Math.abs(amount), category, date: fmt(new Date()), note: '' });
+  finTx.push({ id: uid('t'), type, amount: Math.abs(amount), category, date: fmt(new Date()), note: '' });
   saveFinTx();
   renderFinanzas();
   renderReportes();
