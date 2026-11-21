@@ -127,30 +127,54 @@ function render() {
   renderFinanzas();
   renderBlocMarvin();
   renderSchedule();
+  renderReportes();
 }
 
 function wireStaticEvents() {
   const navDrawer = document.getElementById('nav-drawer');
   const navOverlay = document.getElementById('nav-overlay');
   const viewTitle = document.getElementById('view-title');
-  const openMenu = () => { navDrawer.classList.add('open'); navOverlay.classList.add('open'); };
-  const closeMenu = () => { navDrawer.classList.remove('open'); navOverlay.classList.remove('open'); };
-  document.getElementById('menu-btn').addEventListener('click', openMenu);
+  const menuBtn = document.getElementById('menu-btn');
+  // Más de 1024px: barra lateral fija, siempre visible. Menos: cajón que se abre con la hamburguesa.
+  const sidebarMq = window.matchMedia('(min-width: 1025px)');
+  const isMenuOpen = () => navDrawer.classList.contains('open');
+  const syncDrawerA11y = () => {
+    // Cerrado en móvil: fuera del orden de tabulación y de los lectores de pantalla.
+    navDrawer.inert = !sidebarMq.matches && !isMenuOpen();
+    menuBtn.setAttribute('aria-expanded', String(isMenuOpen()));
+  };
+  const openMenu = () => {
+    navDrawer.classList.add('open'); navOverlay.classList.add('open');
+    syncDrawerA11y();
+    (navDrawer.querySelector('.nav-item.active') || navDrawer.querySelector('.nav-item')).focus({ preventScroll: true });
+  };
+  const closeMenu = () => {
+    const wasOpen = isMenuOpen();
+    navDrawer.classList.remove('open'); navOverlay.classList.remove('open');
+    syncDrawerA11y();
+    if (wasOpen && !sidebarMq.matches) menuBtn.focus({ preventScroll: true });
+  };
+  sidebarMq.addEventListener('change', () => { navDrawer.classList.remove('open'); navOverlay.classList.remove('open'); syncDrawerA11y(); });
+  syncDrawerA11y();
+  menuBtn.addEventListener('click', openMenu);
   document.getElementById('close-menu-btn').addEventListener('click', closeMenu);
   navOverlay.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeQuickExpenseModal(); } });
 
   document.querySelectorAll('.nav-item').forEach(t => {
     t.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(x => { x.classList.remove('active'); x.removeAttribute('aria-current'); });
       document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
+      t.setAttribute('aria-current', 'page');
       document.getElementById('view-' + t.dataset.view).classList.add('active');
-      viewTitle.textContent = t.textContent;
+      viewTitle.textContent = t.querySelector('span').textContent;
       closeMenu();
       if (t.dataset.view === 'analytics') renderTrendChart();
       else if (t.dataset.view === 'horario') { renderSchedule(); if (schedTab === 'semana') scrollSchedWeekToToday(); }
       if (t.dataset.view === 'finanzas') renderFinChart();
+      if (t.dataset.view === 'reportes') renderReportes();
+      if (t.dataset.view === 'mes') scrollMesToToday();
     });
   });
 
@@ -164,6 +188,7 @@ function wireStaticEvents() {
     const [y, m] = e.target.value.split('-');
     monthCursor = new Date(+y, +m - 1, 1);
     renderMes();
+    scrollMesToToday();
   });
 
   document.getElementById('fin-type').addEventListener('change', populateFinCategorySelect);
@@ -191,13 +216,42 @@ function wireStaticEvents() {
     else if (e.target.closest('#backup-cancel-btn')) cancelBackupImport();
   });
   document.getElementById('bloc-notes-textarea').addEventListener('input', e => onBlocNoteInput(e.target.value));
-  document.getElementById('hoy-date-jump').addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
+  const hoyJumpInput = document.getElementById('hoy-date-jump');
+  hoyJumpInput.addEventListener('change', e => { if (e.target.value) selectDay(e.target.value); });
+  // En escritorio el input invisible no abre el calendario solo: pedirlo explícitamente.
+  hoyJumpInput.addEventListener('click', e => { try { if (e.target.showPicker) e.target.showPicker(); } catch (err) {} });
   document.getElementById('eng-date-jump').addEventListener('change', e => { if (e.target.value) selectEngDay(e.target.value); });
 
   document.getElementById('quick-expense-fab').addEventListener('click', openQuickExpenseModal);
   document.getElementById('quick-expense-close-btn').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-overlay').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-save-btn').addEventListener('click', saveQuickExpense);
+  const periodSeg = document.getElementById('report-period');
+  periodSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-period]');
+    if (b) setReportPeriod(b.dataset.period);
+  });
+  periodSeg.addEventListener('keydown', e => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const order = Object.keys(REPORT_PERIODS);
+    setReportPeriod(order[(order.indexOf(reportPeriod) + step + order.length) % order.length]);
+    periodSeg.querySelector('.seg-btn.active').focus();
+  });
+  const quickSeg = document.getElementById('quick-move-type');
+  quickSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-quick-type]');
+    if (b) setQuickMoveType(b.dataset.quickType);
+  });
+  // Flechas para cambiar de tipo, como un grupo de radios.
+  quickSeg.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault();
+    setQuickMoveType(quickMoveType === 'expense' ? 'income' : 'expense');
+    quickSeg.querySelector('.seg-btn.active').focus();
+  });
+  window.addEventListener('hashchange', maybeOpenQuickExpenseFromHash);
   document.getElementById('quick-expense-amount').addEventListener('keydown', e => { if (e.key === 'Enter') saveQuickExpense(); });
 
   document.body.addEventListener('click', e => {
@@ -331,6 +385,7 @@ async function handleSignOut() {
   ['backup-export-status', 'backup-import-status'].forEach(id => setBackupStatus(id, '', ''));
   if (trendChart) { trendChart.destroy(); trendChart = null; }
   if (finChart) { finChart.destroy(); finChart = null; }
+  destroyReportCharts();
 }
 
 function onAuthed(user) {
@@ -371,6 +426,18 @@ async function bootstrap() {
       document.getElementById('logout-btn').style.display = 'none';
     }
   });
+}
+
+// Gráficos con la tipografía del sistema, y redibujados si cambia el tema claro/oscuro.
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  Chart.defaults.font.size = 12;
+}
+if (window.matchMedia) {
+  const schemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const onSchemeChange = () => { renderTrendChart(); renderFinChart(); renderReportes(); };
+  if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onSchemeChange);
+  else if (schemeQuery.addListener) schemeQuery.addListener(onSchemeChange);
 }
 
 wireStaticEvents();

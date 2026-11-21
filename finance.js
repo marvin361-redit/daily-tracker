@@ -18,9 +18,14 @@ async function saveFinGoals() { await guardedSave('fin-goals', () => JSON.string
 async function saveFinSavingsPlans() { await guardedSave('fin-savings-plans', () => JSON.stringify(finSavingsPlans)); }
 async function saveFinSavingsLog() { await guardedSave('fin-savings-log', () => JSON.stringify(finSavingsLog)); }
 
+// "Bs 11.794,00" (es-BO). useGrouping 'always' agrupa también los miles de 4 cifras.
+const MONEY_FMT = (() => {
+  try { return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: 'always' }); }
+  catch (e) { return new Intl.NumberFormat('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+})();
 function money(n) {
-  const v = Math.round((n + Number.EPSILON) * 100) / 100;
-  return 'Bs ' + v.toFixed(2);
+  const v = Math.round(((Number(n) || 0) + Number.EPSILON) * 100) / 100;
+  return (v < 0 ? '−' : '') + 'Bs ' + MONEY_FMT.format(Math.abs(v));
 }
 
 function addTransaction() {
@@ -37,7 +42,7 @@ function addTransaction() {
   let date = document.getElementById('fin-date').value;
   if (!date) date = fmt(new Date());
   const note = document.getElementById('fin-note').value.trim();
-  finTx.push({ id: 't' + Date.now(), type, amount, category, date, note });
+  finTx.push({ id: uid('t'), type, amount, category, date, note });
   amountInp.value = '';
   document.getElementById('fin-note').value = '';
   saveFinTx();
@@ -87,7 +92,7 @@ function addGoal() {
   const name = nameInp.value.trim();
   const target = clampNonNegative(targetInp.value, 0);
   if (!name || target <= 0) return;
-  finGoals.push({ id: 'g' + Date.now(), name, target, saved: 0 });
+  finGoals.push({ id: uid('g'), name, target, saved: 0 });
   nameInp.value = ''; targetInp.value = '';
   saveFinGoals();
   renderFinanzas();
@@ -124,9 +129,12 @@ function renderFinSummary() {
   const monthSavings = monthIncome - monthExpense;
 
   document.getElementById('fin-balance').textContent = money(balance);
-  document.getElementById('fin-balance').style.color = balance >= 0 ? '' : 'var(--red)';
-  document.getElementById('fin-income-month').textContent = money(monthIncome);
-  document.getElementById('fin-expense-month').textContent = money(monthExpense);
+  const incEl = document.getElementById('fin-income-month');
+  incEl.textContent = money(monthIncome);
+  incEl.style.color = 'var(--green)';
+  const expEl = document.getElementById('fin-expense-month');
+  expEl.textContent = money(monthExpense);
+  expEl.style.color = 'var(--red)';
   const savEl = document.getElementById('fin-savings-month');
   savEl.textContent = money(monthSavings);
   savEl.style.color = monthSavings >= 0 ? 'var(--green)' : 'var(--red)';
@@ -151,7 +159,7 @@ function renderFinGoals() {
       </div>
       <div class="barwrap"><div class="bar" style="width:${pct}%;background:${done ? 'var(--green)' : 'var(--accent)'};"></div></div>
       <div class="goal-actions">
-        <input type="number" min="0" step="1" placeholder="Bs a agregar" aria-label="Bs a agregar a ${esc(g.name)}" data-goal-input="${g.id}">
+        <input type="number" min="0" step="1" placeholder="Monto" aria-label="Bs a agregar a ${esc(g.name)}" data-goal-input="${g.id}">
         <button class="btn" data-add-funds="${g.id}">Agregar</button>
         <button class="danger" data-delete-goal="${g.id}">Eliminar</button>
       </div>
@@ -179,25 +187,29 @@ function renderFinHistory() {
         <button class="ghost" data-cancel-edit-tx="${t.id}">Cancelar</button>
       </div>`;
     }
-    const sign = t.type === 'income' ? '+' : '-';
+    const sign = t.type === 'income' ? '+' : '−';
     const color = t.type === 'income' ? 'var(--green)' : 'var(--red)';
+    const dateLabel = new Date(t.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).replace('.', '');
     return `<div class="fin-row">
-      <span class="fin-date">${t.date.slice(5)}</span>
-      <span class="fin-cat">${esc(t.category)}</span>
-      <span class="fin-note">${esc(t.note || '')}</span>
+      <div class="fin-main">
+        <div class="fin-cat">${esc(t.category)}</div>
+        <div class="fin-meta"><span class="fin-date">${dateLabel}</span>${t.note ? `<span class="fin-note">${esc(t.note)}</span>` : ''}</div>
+      </div>
       <span class="fin-amount" style="color:${color};">${sign}${money(t.amount)}</span>
-      <button class="ghost" data-edit-tx="${t.id}" title="Editar">✎</button>
-      <button class="danger" data-delete-tx="${t.id}">×</button>
+      <div class="fin-actions">
+        <button class="icon-btn" data-edit-tx="${t.id}" aria-label="Editar movimiento" title="Editar">${icon('edit')}</button>
+        <button class="icon-btn icon-btn-danger" data-delete-tx="${t.id}" aria-label="Borrar movimiento" title="Borrar">${icon('trash')}</button>
+      </div>
     </div>`;
   }).join('') : '<div class="empty">Sin movimientos este mes.</div>';
 }
 
 function renderFinCategories() {
   document.getElementById('fin-cat-expense').innerHTML = finCatExpense.length
-    ? finCatExpense.map(c => `<span class="cat-chip">${esc(c)}<button data-delete-cat-type="expense" data-delete-cat-name="${esc(c)}">×</button></span>`).join('')
+    ? finCatExpense.map(c => `<span class="cat-chip">${esc(c)}<button data-delete-cat-type="expense" data-delete-cat-name="${esc(c)}" aria-label="Borrar categoría ${esc(c)}">${icon('close')}</button></span>`).join('')
     : '<div class="empty">Sin categorías.</div>';
   document.getElementById('fin-cat-income').innerHTML = finCatIncome.length
-    ? finCatIncome.map(c => `<span class="cat-chip">${esc(c)}<button data-delete-cat-type="income" data-delete-cat-name="${esc(c)}">×</button></span>`).join('')
+    ? finCatIncome.map(c => `<span class="cat-chip">${esc(c)}<button data-delete-cat-type="income" data-delete-cat-name="${esc(c)}" aria-label="Borrar categoría ${esc(c)}">${icon('close')}</button></span>`).join('')
     : '<div class="empty">Sin categorías.</div>';
 }
 
@@ -212,18 +224,23 @@ function renderFinChart() {
   finTx.filter(t => t.type === 'expense' && t.date.startsWith(mKey)).forEach(t => {
     byCat[t.category] = (byCat[t.category] || 0) + t.amount;
   });
-  const labels = Object.keys(byCat);
-  const vals = Object.values(byCat);
+  // De mayor a menor; barras horizontales para que los nombres se lean sin girar.
+  const entries = Object.entries(byCat).sort((x, y) => y[1] - x[1]);
+  const labels = entries.map(e => e[0]);
+  const vals = entries.map(e => Math.round(e[1] * 100) / 100);
+  const wrap = document.getElementById('fin-chart-wrap');
+  if (wrap) wrap.style.height = Math.max(120, labels.length * 40 + 32) + 'px';
 
-  const gridColor = '#2B2C2F';
-  const textColor = '#8C8D90';
+  const { gridColor, textColor, ink, neg } = chartTheme();
+  const shortMoney = v => 'Bs ' + new Intl.NumberFormat('es-BO', { notation: 'compact', maximumFractionDigits: 1 }).format(v);
 
   if (finChart) {
     finChart.data.labels = labels;
     finChart.data.datasets[0].data = vals;
-    finChart.options.scales.y.ticks.color = textColor;
+    finChart.data.datasets[0].backgroundColor = neg;
     finChart.options.scales.x.ticks.color = textColor;
-    finChart.options.scales.y.grid.color = gridColor;
+    finChart.options.scales.x.grid.color = gridColor;
+    finChart.options.scales.y.ticks.color = ink;
     finChart.resize();
     finChart.update();
     return;
@@ -231,14 +248,18 @@ function renderFinChart() {
 
   finChart = new Chart(canvas, {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'Gasto', data: vals, backgroundColor: '#E8A33D', borderRadius: 4 }] },
+    data: { labels, datasets: [{ label: 'Gasto', data: vals, backgroundColor: neg, borderRadius: 6, barPercentage: 0.7, categoryPercentage: 0.9, maxBarThickness: 24 }] },
     options: {
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => money(c.parsed.x) } },
+      },
       scales: {
-        y: { beginAtZero: true, ticks: { color: textColor }, grid: { color: gridColor } },
-        x: { ticks: { color: textColor }, grid: { display: false } },
+        x: { beginAtZero: true, ticks: { color: textColor, maxTicksLimit: 5, callback: shortMoney }, grid: { color: gridColor }, border: { display: false } },
+        y: { ticks: { color: ink, autoSkip: false }, grid: { display: false }, border: { display: false } },
       },
     },
   });
@@ -312,7 +333,7 @@ function addSavingsPlan() {
   const freq = freqSel.value;
   const target = clampNonNegative(targetInp.value, 0);
   if (!name || target <= 0) return;
-  finSavingsPlans.push({ id: 'sp' + Date.now(), name, frequency: freq, targetAmount: target });
+  finSavingsPlans.push({ id: uid('sp'), name, frequency: freq, targetAmount: target });
   nameInp.value = ''; targetInp.value = '';
   saveFinSavingsPlans();
   renderFinanzas();
@@ -395,10 +416,10 @@ function renderFinTips() {
 
   const dynamicTips = [];
   if (monthIncome > 0 && monthExpense > monthIncome) {
-    dynamicTips.push('⚠️ Este mes tus gastos superan tus ingresos. Revisá qué categoría creció más.');
+    dynamicTips.push({ kind: 'alert', text: 'Este mes tus gastos superan tus ingresos. Revisá qué categoría creció más.' });
   } else if (monthIncome > 0) {
     const savedPct = Math.round(((monthIncome - monthExpense) / monthIncome) * 100);
-    if (savedPct >= 20) dynamicTips.push(`✅ Estás ahorrando el ${savedPct}% de tus ingresos este mes. ¡Vas muy bien!`);
+    if (savedPct >= 20) dynamicTips.push({ kind: 'check', text: `Estás ahorrando el ${savedPct}% de tus ingresos este mes. ¡Vas muy bien!` });
   }
   const byCat = {};
   monthTx.filter(t => t.type === 'expense').forEach(t => { byCat[t.category] = (byCat[t.category] || 0) + t.amount; });
@@ -406,11 +427,11 @@ function renderFinTips() {
   if (catEntries.length && monthExpense > 0) {
     const [topCat, topAmt] = catEntries[0];
     const pct = Math.round((topAmt / monthExpense) * 100);
-    if (pct >= 40) dynamicTips.push(`📊 "${esc(topCat)}" es tu categoría más grande este mes (${pct}% de tus gastos).`);
+    if (pct >= 40) dynamicTips.push({ kind: 'info', text: `"${esc(topCat)}" es tu categoría más grande este mes (${pct}% de tus gastos).` });
   }
 
-  const html = dynamicTips.map(t => `<div class="tip-row dynamic">${t}</div>`).join('')
-    + staticTips.map(t => `<div class="tip-row">${t}</div>`).join('');
+  const html = dynamicTips.map(t => `<div class="tip-row dynamic">${icon(t.kind)}<span>${t.text}</span></div>`).join('')
+    + staticTips.map(t => `<div class="tip-row">${icon('info')}<span>${t}</span></div>`).join('');
   document.getElementById('fin-tips').innerHTML = html;
 }
 

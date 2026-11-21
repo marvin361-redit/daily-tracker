@@ -1,14 +1,16 @@
 // Horario semanal: plantilla de bloques por día de la semana + check diario.
 // day usa la convención de Date.getDay() (0 = domingo), igual que DOW en utils.js.
 const SCHED_COLORS = [
-  { id: 'accent', label: 'Claro' },
+  { id: 'accent', label: 'Tinta' },
   { id: 'green', label: 'Verde' },
   { id: 'red', label: 'Rojo' },
   { id: 'muted', label: 'Gris' },
 ];
 const SCHED_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const SCHED_DAY_LONG = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-const SCHED_PX_PER_HOUR = 48;
+const SCHED_PX_PER_HOUR = 64;
+// Bloques más cortos que esto se muestran en una sola línea (solo el nombre).
+const SCHED_SHORT_MIN = 30;
 
 let schedBlocks = [];
 let schedDone = {};
@@ -120,6 +122,7 @@ function resetSchedForm() {
   document.getElementById('sched-end').value = '09:00';
   document.getElementById('sched-color').value = 'accent';
   document.getElementById('sched-form-title').textContent = 'Nuevo bloque';
+  document.getElementById('sched-edit-summary').textContent = '';
   document.getElementById('sched-save-btn').textContent = 'Agregar bloque';
   document.getElementById('sched-cancel-btn').style.display = 'none';
   setSchedFormMsg('', '');
@@ -137,6 +140,7 @@ function startEditSchedBlock(id) {
   document.getElementById('sched-end').value = b.end;
   document.getElementById('sched-color').value = SCHED_COLORS.some(c => c.id === b.color) ? b.color : 'accent';
   document.getElementById('sched-form-title').textContent = 'Editar bloque';
+  document.getElementById('sched-edit-summary').textContent = `${b.name} · ${SCHED_DAY_LONG[b.day]} ${schedRange(b)}`;
   document.getElementById('sched-save-btn').textContent = 'Guardar cambios';
   document.getElementById('sched-cancel-btn').style.display = '';
   renderSchedule();
@@ -316,12 +320,13 @@ function renderSchedSemana() {
   const cols = SCHED_DAY_ORDER.map(day => {
     const blocks = layoutSchedDay(blocksForDay(day)).map(({ b, lane, lanes }) => {
       const top = topOf(toMin(b.start));
-      const h = Math.max(topOf(toMin(b.end)) - top, 20);
-      return `<button class="sched-block" data-edit-sched="${b.id}"
+      const h = Math.max(topOf(toMin(b.end)) - top, 16);
+      const short = toMin(b.end) - toMin(b.start) < SCHED_SHORT_MIN;
+      return `<button class="sched-block${short ? ' short' : ''}" data-edit-sched="${b.id}"
         style="top:${top}px;height:${h}px;left:calc(${lane} * 100% / ${lanes});width:calc(100% / ${lanes});--c:${schedColorVar(b.color)}"
         title="${esc(b.name)} · ${schedRange(b)}" aria-label="${esc(b.name)}, ${SCHED_DAY_LONG[day]} ${schedRange(b)}. Editar">
         <span class="sched-block-name">${esc(b.name)}</span>
-        <span class="sched-block-time">${schedRange(b)}</span>
+        ${short ? '' : `<span class="sched-block-time">${schedRange(b)}</span>`}
       </button>`;
     }).join('');
     const nowLine = day === todayDay && nowMin >= minH * 60 && nowMin <= maxH * 60

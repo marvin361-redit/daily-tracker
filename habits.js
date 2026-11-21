@@ -53,7 +53,7 @@ function addHabit() {
   const inp = document.getElementById('new-habit');
   const name = inp.value.trim();
   if (!name) return;
-  habits.push({ id: 'h' + Date.now(), name, goal: 7 });
+  habits.push({ id: uid('h'), name, goal: 7 });
   inp.value = '';
   saveHabits();
   render();
@@ -84,15 +84,19 @@ function selectDay(ds) {
 
 function renderHoy() {
   const d = new Date(selectedDate + 'T00:00:00');
-  document.getElementById('hoy-title').textContent =
-    selectedDate === fmt(new Date()) ? 'Hoy' : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+  // El título de sección ya dice "Hoy": la fecha solo aparece al mirar otro día.
+  const hoyTitle = document.getElementById('hoy-title');
+  const isToday = selectedDate === fmt(new Date());
+  hoyTitle.hidden = isToday;
+  hoyTitle.textContent = isToday ? '' : d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
 
   const pct = dayPct(selectedDate);
+  const doneCount = habits.filter(h => (logs[selectedDate] || {})[h.id]).length;
+  document.getElementById('hoy-count').textContent =
+    `${doneCount} de ${habits.length} ${habits.length === 1 ? 'hábito' : 'hábitos'}`;
   const ring = document.getElementById('hoy-ring');
   ring.textContent = pct + '%';
-  const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--accent)' : 'var(--red)';
-  ring.style.borderColor = color;
-  ring.style.color = color;
+  ring.style.setProperty('--p', pct);
 
   const list = document.getElementById('hoy-list');
   if (habits.length === 0) {
@@ -133,10 +137,10 @@ function renderGoals() {
     const met = done >= goal;
     return `<div class="goal-row">
       <div class="row">
-        <span style="font-size:13px;">${esc(h.name)}</span>
-        <span style="font-size:12px;color:${met ? 'var(--green)' : 'var(--muted)'};">${done}/${goal}</span>
+        <span>${esc(h.name)}</span>
+        <span style="font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);${met ? 'color:var(--text);font-weight:600;' : ''}">${done}/${goal}</span>
       </div>
-      <div class="barwrap"><div class="bar" style="width:${pct}%;background:${met ? 'var(--green)' : 'var(--accent)'};"></div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%;"></div></div>
     </div>`;
   }).join('');
 }
@@ -150,7 +154,7 @@ function renderMes() {
 
   const todayStr = fmt(new Date());
   let totalDone = 0, totalPossible = 0;
-  let html = '<tr><th style="text-align:left;">Hábito</th>' + dates.map(ds => `<th>${+ds.slice(-2)}</th>`).join('') + '</tr>';
+  let html = '<tr><th style="text-align:left;">Hábito</th>' + dates.map(ds => `<th${ds === todayStr ? ' class="today" aria-current="date"' : ''}>${+ds.slice(-2)}</th>`).join('') + '</tr>';
   habits.forEach(h => {
     html += `<tr><td class="hname">${esc(h.name)}</td>` + dates.map(ds => {
       const on = (logs[ds] || {})[h.id];
@@ -163,7 +167,23 @@ function renderMes() {
   });
   document.getElementById('month-table').innerHTML = html || '<tr><td class="empty">Sin hábitos aún.</td></tr>';
   const pct = totalPossible ? Math.round((totalDone / totalPossible) * 100) : 0;
-  document.getElementById('mes-ring').textContent = pct + '%';
+  const mesRing = document.getElementById('mes-ring');
+  mesRing.textContent = pct + '%';
+  mesRing.style.setProperty('--p', pct);
+}
+
+// Desplaza la tabla del mes para que el día de hoy quede a la vista (centrado
+// junto a la columna fija de nombres). Fuera del mes actual vuelve al día 1.
+// Se llama al entrar a la vista y al cambiar de mes, no en cada toque de casilla.
+function scrollMesToToday() {
+  const table = document.getElementById('month-table');
+  const wrap = table && table.closest('.scroll-x');
+  if (!wrap || !wrap.clientWidth) return; // vista oculta: no hay medidas todavía
+  const todayTh = table.querySelector('th.today');
+  if (!todayTh) { wrap.scrollLeft = 0; return; }
+  const nameW = table.querySelector('th') ? table.querySelector('th').offsetWidth : 0;
+  const visibleDays = wrap.clientWidth - nameW;
+  wrap.scrollLeft = Math.max(0, todayTh.offsetLeft - nameW - (visibleDays - todayTh.offsetWidth) / 2);
 }
 
 function renderAnalytics() {
@@ -196,7 +216,7 @@ function renderAnalytics() {
     </div>`).join('') : '<div class="empty">Aún no hay datos suficientes.</div>';
 
   document.getElementById('an-rank').innerHTML = stats.slice(0, 5).map((s, i) => `
-    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${esc(s.name)}</span><span style="color:var(--accent);font-weight:600;">${s.pct}%</span></div>`
+    <div class="rank"><span class="n">${i + 1}</span><span style="flex:1;">${esc(s.name)}</span><span style="font-weight:600;font-variant-numeric:tabular-nums;">${s.pct}%</span></div>`
   ).join('') || '<div class="empty">-</div>';
 
   if (document.getElementById('view-analytics').classList.contains('active')) renderTrendChart();
@@ -217,12 +237,13 @@ function renderTrendChart() {
     vals.push(dayPct(fmt(x)));
   }
 
-  const gridColor = '#2B2C2F';
-  const textColor = '#8C8D90';
+  const { gridColor, textColor, ink, inkSoft } = chartTheme();
 
   if (trendChart) {
     trendChart.data.labels = labels;
     trendChart.data.datasets[0].data = vals;
+    trendChart.data.datasets[0].borderColor = ink;
+    trendChart.data.datasets[0].backgroundColor = inkSoft;
     trendChart.options.scales.y.ticks.color = textColor;
     trendChart.options.scales.x.ticks.color = textColor;
     trendChart.options.scales.y.grid.color = gridColor;
@@ -238,10 +259,11 @@ function renderTrendChart() {
       datasets: [{
         label: '% cumplido',
         data: vals,
-        borderColor: '#E8A33D',
-        backgroundColor: 'rgba(232,163,61,0.1)',
+        borderColor: ink,
+        backgroundColor: inkSoft,
         fill: true,
         tension: 0.3,
+        cubicInterpolationMode: 'monotone', // la curva no pasa por encima ni debajo de los valores reales
         pointRadius: 0,
         borderWidth: 2,
       }],
@@ -263,7 +285,8 @@ function renderEditor() {
   ed.innerHTML = habits.length ? habits.map(h => `
     <div class="habit-item">
       <input type="text" value="${esc(h.name)}" data-rename-habit="${h.id}" aria-label="Nombre del hábito">
-      <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" aria-label="Meta semanal de ${esc(h.name)} (días)" data-goal-habit="${h.id}">
-      <button class="danger" data-delete-habit="${h.id}">Eliminar</button>
+      <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" aria-label="Meta semanal de ${esc(h.name)} (días por semana)" data-goal-habit="${h.id}">
+      <span class="goal-unit" aria-hidden="true">días/sem</span>
+      <button class="icon-btn icon-btn-danger" data-delete-habit="${h.id}" title="Eliminar" aria-label="Eliminar ${esc(h.name)}"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
     </div>`).join('') : '<div class="empty">No tenés hábitos todavía. Agregá uno abajo.</div>';
 }

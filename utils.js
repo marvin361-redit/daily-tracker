@@ -30,3 +30,26 @@ function getWeekDates(d) {
   }
   return arr;
 }
+
+// Lee un token de color de style.css (cambia con el tema claro/oscuro).
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+// Colores para Chart.js tomados de los tokens del tema actual.
+function chartTheme() {
+  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    gridColor: cssVar('--separator'),
+    textColor: cssVar('--label-2'),
+    ink: cssVar('--label'),
+    inkSoft: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+    pos: cssVar('--pos'),
+    neg: cssVar('--neg'),
+  };
+}
+
+// Ícono de línea del sprite de index.html (hereda el color del texto).
+function icon(name, cls) {
+  return `<svg class="i${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+}
