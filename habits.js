@@ -154,7 +154,7 @@ function renderMes() {
 
   const todayStr = fmt(new Date());
   let totalDone = 0, totalPossible = 0;
-  let html = '<tr><th style="text-align:left;">Hábito</th>' + dates.map(ds => `<th>${+ds.slice(-2)}</th>`).join('') + '</tr>';
+  let html = '<tr><th style="text-align:left;">Hábito</th>' + dates.map(ds => `<th${ds === todayStr ? ' class="today" aria-current="date"' : ''}>${+ds.slice(-2)}</th>`).join('') + '</tr>';
   habits.forEach(h => {
     html += `<tr><td class="hname">${esc(h.name)}</td>` + dates.map(ds => {
       const on = (logs[ds] || {})[h.id];
@@ -170,6 +170,20 @@ function renderMes() {
   const mesRing = document.getElementById('mes-ring');
   mesRing.textContent = pct + '%';
   mesRing.style.setProperty('--p', pct);
+}
+
+// Desplaza la tabla del mes para que el día de hoy quede a la vista (centrado
+// junto a la columna fija de nombres). Fuera del mes actual vuelve al día 1.
+// Se llama al entrar a la vista y al cambiar de mes, no en cada toque de casilla.
+function scrollMesToToday() {
+  const table = document.getElementById('month-table');
+  const wrap = table && table.closest('.scroll-x');
+  if (!wrap || !wrap.clientWidth) return; // vista oculta: no hay medidas todavía
+  const todayTh = table.querySelector('th.today');
+  if (!todayTh) { wrap.scrollLeft = 0; return; }
+  const nameW = table.querySelector('th') ? table.querySelector('th').offsetWidth : 0;
+  const visibleDays = wrap.clientWidth - nameW;
+  wrap.scrollLeft = Math.max(0, todayTh.offsetLeft - nameW - (visibleDays - todayTh.offsetWidth) / 2);
 }
 
 function renderAnalytics() {
@@ -271,7 +285,8 @@ function renderEditor() {
   ed.innerHTML = habits.length ? habits.map(h => `
     <div class="habit-item">
       <input type="text" value="${esc(h.name)}" data-rename-habit="${h.id}" aria-label="Nombre del hábito">
-      <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" aria-label="Meta semanal de ${esc(h.name)} (días)" data-goal-habit="${h.id}">
+      <input type="number" min="1" max="7" value="${h.goal || 7}" title="Meta semanal (días)" aria-label="Meta semanal de ${esc(h.name)} (días por semana)" data-goal-habit="${h.id}">
+      <span class="goal-unit" aria-hidden="true">días/sem</span>
       <button class="icon-btn icon-btn-danger" data-delete-habit="${h.id}" title="Eliminar" aria-label="Eliminar ${esc(h.name)}"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
     </div>`).join('') : '<div class="empty">No tenés hábitos todavía. Agregá uno abajo.</div>';
 }

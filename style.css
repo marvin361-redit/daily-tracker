@@ -271,6 +271,8 @@ td.hname{ text-align:left; white-space:nowrap; padding-right:10px; }
 }
 #month-table td.hname{ box-shadow:1px 0 0 var(--separator); }
 #month-table td{ min-width:30px; }
+#month-table th.today{ color:var(--label); font-weight:700; }
+.goal-unit{ flex-shrink:0; margin-left:calc(-1 * var(--s-2)); font-size:var(--fs-footnote); color:var(--label-2); white-space:nowrap; }
 
 /* Casilla redonda con tilde, estilo Recordatorios. */
 .chk{

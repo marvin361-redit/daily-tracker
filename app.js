@@ -174,6 +174,7 @@ function wireStaticEvents() {
       else if (t.dataset.view === 'horario') { renderSchedule(); if (schedTab === 'semana') scrollSchedWeekToToday(); }
       if (t.dataset.view === 'finanzas') renderFinChart();
       if (t.dataset.view === 'reportes') renderReportes();
+      if (t.dataset.view === 'mes') scrollMesToToday();
     });
   });
 
@@ -187,6 +188,7 @@ function wireStaticEvents() {
     const [y, m] = e.target.value.split('-');
     monthCursor = new Date(+y, +m - 1, 1);
     renderMes();
+    scrollMesToToday();
   });
 
   document.getElementById('fin-type').addEventListener('change', populateFinCategorySelect);
