@@ -7,7 +7,9 @@
 
 - Rama `rediseno-premium`, nunca `main`. Solo localStorage/harness, nunca
   el Supabase real. No cambiar la forma de ninguna clave de datos.
-- Estilo Apple monocromático, claro/oscuro según el sistema. Vidrio solo
+- Estilo Apple monocromático. Tema claro/oscuro según el sistema por
+  defecto, o elegido en el menú (Sistema / Claro / Oscuro), guardado por
+  dispositivo en localStorage "ui-theme" (nunca en Supabase). Vidrio solo
   en barra superior, menú, modales y FAB.
 - Cero emojis: solo íconos de línea del sprite (trazo 1.75, `currentColor`).
 - Verde y rojo apagados solo para dinero; rojo también en errores y borrar.

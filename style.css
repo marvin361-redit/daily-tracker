@@ -1,11 +1,12 @@
 /* =====================================================================
    Sistema visual — Mi Daily Tracker
-   Monocromo, tipografía del sistema, claro/oscuro según el sistema.
+   Monocromo, tipografía del sistema, claro/oscuro según el sistema o
+   la elección del menú (html[data-theme], lo pone el script del <head>).
    El color existe solo para dinero: verde (ingreso) y rojo (gasto,
    errores, borrar), apagados y con contraste AA en ambos temas.
    ===================================================================== */
 :root{
-  color-scheme:light dark;
+  color-scheme:light;
 
   /* ---- Color: tema claro (base) ---- */
   --bg:#F2F2F2;              /* fondo de la app */
@@ -67,8 +68,9 @@
   --text:var(--label); --muted:var(--label-2); --green:var(--pos); --red:var(--neg);
 }
 
-@media (prefers-color-scheme: dark){
-  :root{
+/* Oscuro: lo activa data-theme="dark" (sistema en oscuro o elegido en el menú). */
+:root[data-theme="dark"]{
+    color-scheme:dark;
     --bg:#000000;
     --surface:#1A1A1A;
     --surface-raised:#222222;
@@ -92,7 +94,6 @@
     --shadow-1:none;
     --shadow-2:0 4px 16px rgba(0,0,0,.5);
     --shadow-3:0 24px 56px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.06);
-  }
 }
 
 /* Vidrio con respaldo opaco donde backdrop-filter no existe. */
@@ -183,6 +184,10 @@ body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
 .nav-item:active{ transform:scale(.98); }
 .nav-item.active{ background:var(--label); color:var(--on-ink); font-weight:600; }
 .nav-item.active .i{ color:inherit; }
+/* Selector de tema al pie del menú. */
+.nav-theme{ margin-top:auto; padding-top:var(--s-5); }
+.nav-theme-label{ display:block; margin:0 var(--s-3) var(--s-2); font-size:var(--fs-footnote); color:var(--label-2); }
+.nav-theme .seg-btn{ font-size:var(--fs-footnote); }
 /* Al abrir, los ítems entran escalonados con un desplazamiento corto. */
 @media (max-width: 1024px){
   .nav-drawer .nav-list > *{ opacity:0; transform:translateX(-8px); transition:opacity .2s var(--ease), transform .25s var(--ease); }
