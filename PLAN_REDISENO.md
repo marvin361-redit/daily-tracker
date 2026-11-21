@@ -17,7 +17,7 @@
 ## Fases
 
 1. **Sistema visual** — HECHA.
-2. **Navegación** — PENDIENTE. Menú hamburguesa con vidrio, íconos del
+2. **Navegación** — HECHA. Menú hamburguesa con vidrio, íconos del
    sprite, animación suave y sección activa marcada. En pantallas de más de
    1024px, barra lateral fija en vez de hamburguesa.
 3. **Movimiento rápido** — PENDIENTE. El modal "Gasto rápido" pasa a
