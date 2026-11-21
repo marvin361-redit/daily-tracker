@@ -133,20 +133,41 @@ function wireStaticEvents() {
   const navDrawer = document.getElementById('nav-drawer');
   const navOverlay = document.getElementById('nav-overlay');
   const viewTitle = document.getElementById('view-title');
-  const openMenu = () => { navDrawer.classList.add('open'); navOverlay.classList.add('open'); };
-  const closeMenu = () => { navDrawer.classList.remove('open'); navOverlay.classList.remove('open'); };
-  document.getElementById('menu-btn').addEventListener('click', openMenu);
+  const menuBtn = document.getElementById('menu-btn');
+  // Más de 1024px: barra lateral fija, siempre visible. Menos: cajón que se abre con la hamburguesa.
+  const sidebarMq = window.matchMedia('(min-width: 1025px)');
+  const isMenuOpen = () => navDrawer.classList.contains('open');
+  const syncDrawerA11y = () => {
+    // Cerrado en móvil: fuera del orden de tabulación y de los lectores de pantalla.
+    navDrawer.inert = !sidebarMq.matches && !isMenuOpen();
+    menuBtn.setAttribute('aria-expanded', String(isMenuOpen()));
+  };
+  const openMenu = () => {
+    navDrawer.classList.add('open'); navOverlay.classList.add('open');
+    syncDrawerA11y();
+    (navDrawer.querySelector('.nav-item.active') || navDrawer.querySelector('.nav-item')).focus({ preventScroll: true });
+  };
+  const closeMenu = () => {
+    const wasOpen = isMenuOpen();
+    navDrawer.classList.remove('open'); navOverlay.classList.remove('open');
+    syncDrawerA11y();
+    if (wasOpen && !sidebarMq.matches) menuBtn.focus({ preventScroll: true });
+  };
+  sidebarMq.addEventListener('change', () => { navDrawer.classList.remove('open'); navOverlay.classList.remove('open'); syncDrawerA11y(); });
+  syncDrawerA11y();
+  menuBtn.addEventListener('click', openMenu);
   document.getElementById('close-menu-btn').addEventListener('click', closeMenu);
   navOverlay.addEventListener('click', closeMenu);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeQuickExpenseModal(); } });
 
   document.querySelectorAll('.nav-item').forEach(t => {
     t.addEventListener('click', () => {
-      document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(x => { x.classList.remove('active'); x.removeAttribute('aria-current'); });
       document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
+      t.setAttribute('aria-current', 'page');
       document.getElementById('view-' + t.dataset.view).classList.add('active');
-      viewTitle.textContent = t.textContent;
+      viewTitle.textContent = t.querySelector('span').textContent;
       closeMenu();
       if (t.dataset.view === 'analytics') renderTrendChart();
       else if (t.dataset.view === 'horario') { renderSchedule(); if (schedTab === 'semana') scrollSchedWeekToToday(); }

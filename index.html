@@ -48,7 +48,7 @@
 </svg>
 
 <div class="topbar">
-  <button class="icon-btn" id="menu-btn" title="Menú" aria-label="Abrir menú">
+  <button class="icon-btn" id="menu-btn" title="Menú" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav-drawer">
     <svg class="i" aria-hidden="true"><use href="#i-menu"/></svg>
   </button>
   <div class="topbar-title">
@@ -63,22 +63,26 @@
 <div id="sync-error" class="sync-banner" style="display:none;"></div>
 
 <div class="nav-overlay" id="nav-overlay"></div>
-<nav class="nav-drawer glass" id="nav-drawer">
+<nav class="nav-drawer glass" id="nav-drawer" aria-label="Secciones">
   <div class="nav-drawer-header">
     <strong>Menú</strong>
     <button class="icon-btn" id="close-menu-btn" aria-label="Cerrar menú">
       <svg class="i" aria-hidden="true"><use href="#i-close"/></svg>
     </button>
   </div>
-  <div class="nav-item active" role="button" tabindex="0" data-view="hoy">Hoy</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="mes">Mes</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="analytics">Analíticas</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="editar">Editar hábitos</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="ingles">Inglés</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="finanzas">Finanzas</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="bloc-marvin">Bloc de Marvin</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="horario">Horario</div>
-  <div class="nav-item" role="button" tabindex="0" data-view="respaldo">Respaldo</div>
+  <div class="nav-list">
+    <button type="button" class="nav-item active" aria-current="page" data-view="hoy"><svg class="i" aria-hidden="true"><use href="#i-hoy"/></svg><span>Hoy</span></button>
+    <button type="button" class="nav-item" data-view="mes"><svg class="i" aria-hidden="true"><use href="#i-mes"/></svg><span>Mes</span></button>
+    <button type="button" class="nav-item" data-view="analytics"><svg class="i" aria-hidden="true"><use href="#i-analytics"/></svg><span>Analíticas</span></button>
+    <button type="button" class="nav-item" data-view="editar"><svg class="i" aria-hidden="true"><use href="#i-editar"/></svg><span>Editar hábitos</span></button>
+    <div class="nav-sep" role="separator"></div>
+    <button type="button" class="nav-item" data-view="ingles"><svg class="i" aria-hidden="true"><use href="#i-ingles"/></svg><span>Inglés</span></button>
+    <button type="button" class="nav-item" data-view="finanzas"><svg class="i" aria-hidden="true"><use href="#i-finanzas"/></svg><span>Finanzas</span></button>
+    <button type="button" class="nav-item" data-view="bloc-marvin"><svg class="i" aria-hidden="true"><use href="#i-bloc-marvin"/></svg><span>Bloc de Marvin</span></button>
+    <button type="button" class="nav-item" data-view="horario"><svg class="i" aria-hidden="true"><use href="#i-horario"/></svg><span>Horario</span></button>
+    <div class="nav-sep" role="separator"></div>
+    <button type="button" class="nav-item" data-view="respaldo"><svg class="i" aria-hidden="true"><use href="#i-respaldo"/></svg><span>Respaldo</span></button>
+  </div>
 </nav>
 
 <h2 class="view-title" id="view-title">Hoy</h2>
