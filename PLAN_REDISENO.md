@@ -26,7 +26,7 @@
    `fin-cat-income`). Reusar `saveFinTx()` con type `'expense'` o
    `'income'`. `#quick-expense` sigue funcionando y se agrega
    `#quick-income`.
-4. **Reportes** — PENDIENTE. Sección nueva con Chart.js en monocromo
+4. **Reportes** — HECHA. Sección nueva con Chart.js en monocromo
    (verde/rojo solo en dinero), filtro semana / mes / 3 meses / año, y
    estados vacíos:
    - Finanzas: ingresos vs gastos por mes, gasto por categoría, balance
