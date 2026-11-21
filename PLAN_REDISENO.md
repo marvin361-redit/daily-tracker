@@ -34,6 +34,6 @@
    - Hábitos: cumplimiento semanal y mapa de calor anual tipo GitHub.
    - Inglés: horas por semana.
    - Horario: % de bloques cumplidos por semana.
-5. **Pulido** — PENDIENTE. Revisar todas las secciones, contraste en ambos
+5. **Pulido** — HECHA. Revisar todas las secciones, contraste en ambos
    temas, toques de 44px, safe areas de iPhone, y que nada se rompa con 0
    datos.
