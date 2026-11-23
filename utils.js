@@ -36,9 +36,49 @@ function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+// ---------- Tema (Sistema / Claro / Oscuro) ----------
+// Preferencia por dispositivo en localStorage "ui-theme" (no se sincroniza
+// ni entra en el respaldo). El script del <head> la aplica antes de pintar.
+const THEME_KEY = 'ui-theme';
+const THEME_COLORS = { light: '#F2F2F2', dark: '#000000' }; // = --bg de cada tema
+const systemDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+let themePrefMem = null; // elección de esta sesión (por si localStorage no está disponible)
+
+function getThemePref() {
+  let p = themePrefMem;
+  if (p === null) { try { p = localStorage.getItem(THEME_KEY); } catch (e) {} }
+  return p === 'light' || p === 'dark' ? p : 'system';
+}
+
+function isDarkTheme() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+
+function applyTheme() {
+  const pref = getThemePref();
+  const dark = pref === 'dark' || (pref === 'system' && !!systemDarkQuery && systemDarkQuery.matches);
+  const root = document.documentElement;
+  const changed = isDarkTheme() !== dark;
+  root.setAttribute('data-theme', dark ? 'dark' : 'light');
+  root.setAttribute('data-theme-pref', pref);
+  const meta = document.getElementById('theme-color-meta');
+  if (meta) meta.content = THEME_COLORS[dark ? 'dark' : 'light'];
+  document.dispatchEvent(new CustomEvent('themeprefapplied'));
+  if (changed) document.dispatchEvent(new CustomEvent('themechange'));
+}
+
+function setThemePref(pref) {
+  if (pref !== 'light' && pref !== 'dark') pref = 'system';
+  themePrefMem = pref;
+  try {
+    if (pref === 'system') localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, pref);
+  } catch (e) {} // sin localStorage (p. ej. modo privado estricto): vale solo para esta sesión
+  applyTheme();
+}
+
 // Colores para Chart.js tomados de los tokens del tema actual.
 function chartTheme() {
-  const dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = isDarkTheme();
   return {
     gridColor: cssVar('--separator'),
     textColor: cssVar('--label-2'),

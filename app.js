@@ -226,6 +226,32 @@ function wireStaticEvents() {
   document.getElementById('quick-expense-close-btn').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-overlay').addEventListener('click', closeQuickExpenseModal);
   document.getElementById('quick-expense-save-btn').addEventListener('click', saveQuickExpense);
+  const themeSeg = document.getElementById('theme-seg');
+  const syncThemeSeg = () => {
+    const pref = document.documentElement.getAttribute('data-theme-pref') || 'system';
+    themeSeg.querySelectorAll('.seg-btn').forEach(b => {
+      const on = b.dataset.themePref === pref;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+  };
+  themeSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-theme-pref]');
+    if (!b) return;
+    setThemePref(b.dataset.themePref);
+  });
+  themeSeg.addEventListener('keydown', e => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const order = ['system', 'light', 'dark'];
+    const cur = document.documentElement.getAttribute('data-theme-pref') || 'system';
+    setThemePref(order[(order.indexOf(cur) + step + order.length) % order.length]);
+    themeSeg.querySelector('.seg-btn.active').focus();
+  });
+  document.addEventListener('themeprefapplied', syncThemeSeg);
+  syncThemeSeg();
   const periodSeg = document.getElementById('report-period');
   periodSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-period]');
@@ -433,11 +459,13 @@ if (typeof Chart !== 'undefined') {
   Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
   Chart.defaults.font.size = 12;
 }
-if (window.matchMedia) {
-  const schemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-  const onSchemeChange = () => { renderTrendChart(); renderFinChart(); renderReportes(); };
-  if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onSchemeChange);
-  else if (schemeQuery.addListener) schemeQuery.addListener(onSchemeChange);
+// Tema: los gráficos toman colores de los tokens, así que se redibujan al cambiar.
+document.addEventListener('themechange', () => { renderTrendChart(); renderFinChart(); renderReportes(); });
+if (systemDarkQuery) {
+  // Con "Sistema" elegido, seguir los cambios del sistema en vivo.
+  const onSystemChange = () => { if (document.documentElement.getAttribute('data-theme-pref') === 'system') applyTheme(); };
+  if (systemDarkQuery.addEventListener) systemDarkQuery.addEventListener('change', onSystemChange);
+  else if (systemDarkQuery.addListener) systemDarkQuery.addListener(onSystemChange);
 }
 
 wireStaticEvents();
