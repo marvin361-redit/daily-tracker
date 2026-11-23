@@ -187,7 +187,8 @@ body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
 /* Selector de tema al pie del menú. */
 .nav-theme{ margin-top:auto; padding-top:var(--s-5); }
 .nav-theme-label{ display:block; margin:0 var(--s-3) var(--s-2); font-size:var(--fs-footnote); color:var(--label-2); }
-.nav-theme .seg-btn{ font-size:var(--fs-footnote); }
+.nav-theme .seg-btn{ display:flex; align-items:center; justify-content:center; gap:5px; padding:0 4px; font-size:var(--fs-footnote); }
+.nav-theme .seg-btn .i{ width:16px; height:16px; }
 /* Al abrir, los ítems entran escalonados con un desplazamiento corto. */
 @media (max-width: 1024px){
   .nav-drawer .nav-list > *{ opacity:0; transform:translateX(-8px); transition:opacity .2s var(--ease), transform .25s var(--ease); }
