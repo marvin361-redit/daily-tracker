@@ -44,8 +44,9 @@
 
 ## Features después del rediseño
 
-- **Racha con llama** (rama `racha-llama`) — EN REVISIÓN. Arriba de la
+- **Racha con llama** (rama `racha-llama`) — HECHA. Arriba de la
   lista de Hoy. Un día cuenta con dayPct ≥ 75; racha = días seguidos desde
   ayer hacia atrás, más hoy si ya pasó el 75%. Se calcula de `logs`, sin
   claves nuevas en Supabase; solo `streak-ignited-date` en localStorage
-  (encendido animado una vez por día). Hitos 7, 30, 100 y 365.
+  (encendido animado una vez por día). Hitos 7, 30, 100 y 365. La racha
+  de Analíticas usa la misma función (`computeStreak`).
