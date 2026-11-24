@@ -265,6 +265,128 @@ body:not(.authed) #menu-btn, body:not(.authed) .view-title{ display:none; }
 .ring::before{ content:''; position:absolute; inset:5px; border-radius:50%; background:var(--surface); z-index:-1; }
 .ring.small{ font-size:var(--fs-caption); }
 
+/* ---------- Racha con llama (vista Hoy) ----------
+   Excepción de color: la llama es lo único naranja/dorado del sistema.
+   Solo se animan transform y opacity (fluido en iPhone, sin filtros). */
+.streak{ display:flex; align-items:center; gap:var(--s-4); min-height:96px; }
+.streak:empty{ display:none; }
+.streak-flame{ width:56px; height:75px; flex-shrink:0; overflow:visible; }
+.streak-flame *{ transform-box:fill-box; }
+.streak-body{ min-width:0; flex:1; }
+.streak-msg{ margin:0; font-size:var(--fs-callout); color:var(--label-2); line-height:1.4; }
+.streak-msg strong{ color:var(--label); font-size:var(--fs-headline); letter-spacing:-.2px; font-variant-numeric:tabular-nums; }
+.streak-count{ display:flex; align-items:baseline; gap:6px; line-height:1; }
+.streak-num{ display:inline-block; font-size:44px; font-weight:700; letter-spacing:-1.5px; font-variant-numeric:tabular-nums; color:var(--label); transform-origin:left bottom; }
+.streak-unit{ font-size:var(--fs-headline); font-weight:600; color:var(--label); }
+.streak-sub{ margin-top:6px; font-size:var(--fs-footnote); color:var(--label-2); font-variant-numeric:tabular-nums; }
+.streak-chip{
+  display:inline-block; margin-top:var(--s-2); padding:3px 10px; border-radius:var(--r-pill);
+  background:var(--fill); color:var(--label); font-size:var(--fs-caption); font-weight:600;
+}
+
+/* Apagada: mecha gris quieta con un hilo de humo. */
+.sk-base{ fill:var(--fill-strong); }
+.sk-wick{ stroke:var(--label-3); }
+.sk-ember{ fill:var(--label-3); }
+.sk-smoke{ stroke:var(--label-3); opacity:0; transform-origin:50% 100%; animation:skSmoke 4.5s ease-in-out infinite; }
+.sk-glow, .sk-flame, .sk-spark, .sk-flash, .sk-spark0, .sk-burst{ opacity:0; }
+@keyframes skSmoke{
+  0%{ opacity:0; transform:translateY(4px) scaleY(.85); }
+  35%{ opacity:.45; }
+  100%{ opacity:0; transform:translateY(-6px) scaleY(1.05); }
+}
+
+/* Encendida */
+.is-lit .sk-smoke{ display:none; }
+.is-lit .sk-ember{ fill:#FF8A1F; }
+.is-lit .sk-flame{ opacity:1; transform-origin:50% 100%; }
+.is-lit .sk-l{ transform-origin:50% 100%; will-change:transform; }
+.is-lit .sk-outer{ animation:skFlickA 1.9s ease-in-out infinite; }
+.is-lit .sk-mid{ animation:skFlickB 1.35s ease-in-out -.45s infinite; }
+.is-lit .sk-core{ animation:skFlickC .95s ease-in-out -.2s infinite; }
+.is-lit .sk-glow{ opacity:.8; transform-origin:50% 50%; animation:skGlow 2.6s ease-in-out infinite; }
+:root[data-theme="dark"] .is-lit .sk-glow{ opacity:1; }
+.is-lit .sk-spark{ fill:#FFC24A; will-change:transform, opacity; animation:skRise 2.2s ease-out infinite; }
+.is-lit .sk-s2{ animation-duration:2.8s; animation-delay:-1.1s; --sx:4px; }
+.is-lit .sk-s3{ animation-duration:2.5s; animation-delay:-1.9s; --sx:-3px; }
+@keyframes skFlickA{
+  0%,100%{ transform:scale(1,1) skewX(0); }
+  22%{ transform:scale(.97,1.05) skewX(1.6deg); }
+  48%{ transform:scale(1.02,.97) skewX(-1.2deg); }
+  74%{ transform:scale(.98,1.03) skewX(.8deg); }
+}
+@keyframes skFlickB{
+  0%,100%{ transform:scale(1,1) skewX(0); }
+  30%{ transform:scale(1.03,.95) skewX(-2deg); }
+  60%{ transform:scale(.96,1.06) skewX(1.5deg); }
+}
+@keyframes skFlickC{
+  0%,100%{ transform:scale(1,1); }
+  40%{ transform:scale(.94,1.08); }
+  70%{ transform:scale(1.04,.95); }
+}
+@keyframes skGlow{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+@keyframes skRise{
+  0%{ opacity:0; transform:translate(0, 6px) scale(1); }
+  20%{ opacity:1; }
+  100%{ opacity:0; transform:translate(var(--sx, -2px), -22px) scale(.4); }
+}
+
+/* Encendido épico (~1,2 s): chispa, crecimiento desde la mecha, destello, contador. */
+.igniting .sk-spark0{ fill:#FFE08A; transform-origin:50% 50%; animation:skSpark0 .42s var(--ease) both; }
+.igniting .sk-flame{ animation:skGrow .72s cubic-bezier(.2,1.5,.45,1) .16s both; }
+.igniting .sk-glow{ animation:skGlowIn .9s var(--ease) .3s both, skGlow 2.6s ease-in-out 1.2s infinite; }
+.igniting .sk-flash{ transform-origin:50% 50%; animation:skFlash .55s ease-out .5s both; }
+.igniting .sk-burst{ fill:#FFC24A; transform-origin:50% 50%; animation:skBurst .75s cubic-bezier(.15,.7,.3,1) var(--d) both; }
+.igniting .sk-spark{ animation:none; opacity:0; }
+.igniting .streak-count{ animation:skFadeUp .3s var(--ease) .38s both; }
+.igniting .streak-num{ animation:skNumPop .5s cubic-bezier(.2,1.6,.4,1) 1.05s both; }
+.igniting .streak-sub{ animation:skFadeUp .4s var(--ease) .75s both; }
+.igniting .streak-chip{ animation:skFadeUp .45s var(--ease) 1.1s both; }
+.is-milestone .sk-flame{ animation:skGrowBig .85s cubic-bezier(.2,1.6,.45,1) .16s both; }
+.is-milestone .sk-flash{ animation:skFlashBig .7s ease-out .5s both; }
+.is-milestone .sk-burst{ animation-duration:1s; }
+@keyframes skSpark0{
+  0%{ opacity:0; transform:scale(0); }
+  35%{ opacity:1; transform:scale(1.7); }
+  100%{ opacity:0; transform:scale(.3); }
+}
+@keyframes skGrow{
+  0%{ opacity:0; transform:scale(.06, .04); }
+  25%{ opacity:1; }
+  100%{ opacity:1; transform:scale(1); }
+}
+@keyframes skGrowBig{
+  0%{ opacity:0; transform:scale(.06, .04); }
+  25%{ opacity:1; }
+  60%{ transform:scale(1.18, 1.25); }
+  100%{ opacity:1; transform:scale(1); }
+}
+@keyframes skGlowIn{ from{ opacity:0; transform:scale(.4); } }
+@keyframes skFlash{
+  0%{ opacity:0; transform:scale(.3); }
+  35%{ opacity:.95; }
+  100%{ opacity:0; transform:scale(1.5); }
+}
+@keyframes skFlashBig{
+  0%{ opacity:0; transform:scale(.3); }
+  30%{ opacity:1; }
+  100%{ opacity:0; transform:scale(2.1); }
+}
+@keyframes skBurst{
+  0%{ opacity:0; transform:translate(0, 0) scale(1); }
+  15%{ opacity:1; }
+  100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(.3); }
+}
+@keyframes skNumPop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.14); } 100%{ transform:scale(1); } }
+@keyframes skFadeUp{ from{ opacity:0; transform:translateY(4px); } }
+
+@media (prefers-reduced-motion: reduce){
+  .streak-flame *, .streak-body *{ animation:none !important; }
+  .sk-smoke{ opacity:.35; }
+  .is-lit .sk-spark{ opacity:0; }
+}
+
 .scroll-x{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
 table{ width:100%; border-collapse:collapse; font-size:var(--fs-footnote); }
 th, td{ padding:var(--s-2) 6px; text-align:center; border-bottom:1px solid var(--separator); }
