@@ -20,9 +20,12 @@ async function saveLogs() { await guardedSave('logs', () => JSON.stringify(logs)
 async function saveNotes() { await guardedSave('notes', () => JSON.stringify(notes)); }
 
 function toggle(date, habitId) {
+  const isToday = date === fmt(new Date());
+  const beforePct = isToday ? dayPct(date) : 0;
   logs[date] = logs[date] || {};
   logs[date][habitId] = !logs[date][habitId];
   saveLogs();
+  if (isToday && typeof streakOnToggle === 'function') streakOnToggle(beforePct, dayPct(date));
   render();
 }
 
@@ -97,6 +100,8 @@ function renderHoy() {
   const ring = document.getElementById('hoy-ring');
   ring.textContent = pct + '%';
   ring.style.setProperty('--p', pct);
+
+  if (typeof renderStreak === 'function') renderStreak();
 
   const list = document.getElementById('hoy-list');
   if (habits.length === 0) {
@@ -190,11 +195,8 @@ function renderAnalytics() {
   const loggedDaysWithActivity = Object.keys(logs).filter(ds => Object.values(logs[ds] || {}).some(v => v));
   document.getElementById('an-total').textContent = loggedDaysWithActivity.length;
 
-  let streak = 0;
-  let d = new Date();
-  if (!logs[fmt(d)]) d.setDate(d.getDate() - 1); // hoy sin ninguna marca todavía: no cuenta como racha rota
-  while (dayPct(fmt(d)) > 0) { streak++; d.setDate(d.getDate() - 1); }
-  document.getElementById('an-streak').textContent = streak;
+  // Misma regla que la llama de Hoy (streak.js): días con al menos 75%.
+  document.getElementById('an-streak').textContent = computeStreak().total;
 
   const allLoggedDays = Object.keys(logs);
   let avg = 0;

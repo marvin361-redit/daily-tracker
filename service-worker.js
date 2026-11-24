@@ -1,10 +1,11 @@
-const CACHE_NAME = 'daily-tracker-v24';
+const CACHE_NAME = 'daily-tracker-v26';
 const APP_SHELL = [
   './index.html',
   './style.css',
   './utils.js',
   './storage.js',
   './habits.js',
+  './streak.js',
   './english.js',
   './finance.js',
   './quick-expense.js',

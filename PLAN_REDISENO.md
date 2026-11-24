@@ -13,6 +13,8 @@
   en barra superior, menú, modales y FAB.
 - Cero emojis: solo íconos de línea del sprite (trazo 1.75, `currentColor`).
 - Verde y rojo apagados solo para dinero; rojo también en errores y borrar.
+- Excepción de color: la llama de la racha (vista Hoy) es lo único con
+  naranja/dorado en todo el sistema. Nada más usa esos tonos.
 - En cada fase: subir `CACHE_NAME`, agregar archivos nuevos a `APP_SHELL`,
   commit, capturas a 390 y 1280 en claro y oscuro, y esperar el OK.
 
@@ -39,3 +41,12 @@
 5. **Pulido** — HECHA. Revisar todas las secciones, contraste en ambos
    temas, toques de 44px, safe areas de iPhone, y que nada se rompa con 0
    datos.
+
+## Features después del rediseño
+
+- **Racha con llama** (rama `racha-llama`) — HECHA. Arriba de la
+  lista de Hoy. Un día cuenta con dayPct ≥ 75; racha = días seguidos desde
+  ayer hacia atrás, más hoy si ya pasó el 75%. Se calcula de `logs`, sin
+  claves nuevas en Supabase; solo `streak-ignited-date` en localStorage
+  (encendido animado una vez por día). Hitos 7, 30, 100 y 365. La racha
+  de Analíticas usa la misma función (`computeStreak`).
